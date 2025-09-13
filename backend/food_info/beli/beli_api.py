@@ -3,7 +3,7 @@ from .types.beli_types import BeliTopItem, BeliRestaurantTopItems, BeliUserProfi
 from auth.auth_api import get_current_user
 from auth.types.auth_types import UserResponse
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 router = APIRouter(prefix="/beli", tags=["beli"])
 
@@ -135,20 +135,3 @@ async def get_user_profile(
     
     return profile
 
-@router.get("/user/{user_id}/reviews", response_model=List[BeliUserRestaurantReview])
-async def get_user_restaurant_reviews(
-    user_id: str,
-    limit: Optional[int] = 20,
-    current_user: UserResponse = Depends(get_current_user)
-):
-    """Get all restaurant reviews by a specific user from Beli"""
-    # Mock implementation - replace with actual Beli API call
-    profile = MOCK_USER_PROFILES.get(user_id)
-    if not profile:
-        return []
-    
-    reviews = profile.restaurant_reviews
-    if limit:
-        reviews = reviews[:limit]
-    
-    return reviews

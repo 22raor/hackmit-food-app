@@ -1,14 +1,17 @@
-import openai
+import anthropic
 from typing import List, Dict, Any, Optional
 import os
 from datetime import datetime
+import json
 
-class GPTClient:
+class ClaudeClient:
     def __init__(self, api_key: Optional[str] = None):
-        """Initialize GPT client with API key"""
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        """Initialize Claude client with API key"""
+        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if self.api_key:
-            openai.api_key = self.api_key
+            self.client = anthropic.Anthropic(api_key=self.api_key)
+        else:
+            self.client = None
         
     async def generate_food_recommendation(
         self,
@@ -19,7 +22,7 @@ class GPTClient:
         current_dislikes: List[str],
         restaurant_name: str
     ) -> Dict[str, Any]:
-        """Generate food recommendation using GPT"""
+        """Generate food recommendation using Claude Haiku 3"""
         
         # Build the prompt
         prompt = self._build_recommendation_prompt(
@@ -32,28 +35,28 @@ class GPTClient:
         )
         
         try:
-            # Mock response for now - replace with actual OpenAI call
-            if not self.api_key:
-                return self._mock_gpt_response(restaurant_items, current_dislikes)
+            # Mock response if no API key
+            if not self.client:
+                return self._mock_claude_response(restaurant_items, current_dislikes)
             
-            # Actual OpenAI API call (uncomment when ready to use)
-            # response = await openai.ChatCompletion.acreate(
-            #     model="gpt-4",
-            #     messages=[
-            #         {"role": "system", "content": "You are a food recommendation expert."},
-            #         {"role": "user", "content": prompt}
-            #     ],
-            #     max_tokens=500,
-            #     temperature=0.7
-            # )
-            # 
-            # return self._parse_gpt_response(response.choices[0].message.content)
+            # Actual Claude API call
+            response = self.client.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=500,
+                temperature=0.7,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
             
-            return self._mock_gpt_response(restaurant_items, current_dislikes)
+            return self._parse_claude_response(response.content[0].text)
             
         except Exception as e:
-            print(f"GPT API error: {e}")
-            return self._mock_gpt_response(restaurant_items, current_dislikes)
+            print(f"Claude API error: {e}")
+            return self._mock_claude_response(restaurant_items, current_dislikes)
     
     def _build_recommendation_prompt(
         self,
@@ -64,7 +67,7 @@ class GPTClient:
         current_dislikes: List[str],
         restaurant_name: str
     ) -> str:
-        """Build the GPT prompt for food recommendation"""
+        """Build the Claude prompt for food recommendation"""
         
         prompt = f"""
 You are a food recommendation expert helping a user choose their next meal at {restaurant_name}.
@@ -124,8 +127,8 @@ Make sure to:
             formatted.append(f"- {fav.get('name', 'Unknown')}: {fav.get('friend_recommendations', 0)} friend recommendations")
         return '\n'.join(formatted)
     
-    def _mock_gpt_response(self, restaurant_items: List[Dict[str, Any]], current_dislikes: List[str]) -> Dict[str, Any]:
-        """Mock GPT response for testing"""
+    def _mock_claude_response(self, restaurant_items: List[Dict[str, Any]], current_dislikes: List[str]) -> Dict[str, Any]:
+        """Mock Claude response for testing"""
         available_items = [item for item in restaurant_items if item.get('name') not in current_dislikes]
         
         if available_items:
@@ -142,10 +145,9 @@ Make sure to:
                 "confidence": 0.75
             }
     
-    def _parse_gpt_response(self, response_text: str) -> Dict[str, Any]:
-        """Parse GPT response text into structured data"""
+    def _parse_claude_response(self, response_text: str) -> Dict[str, Any]:
+        """Parse Claude response text into structured data"""
         try:
-            import json
             return json.loads(response_text)
         except:
             # Fallback parsing if JSON parsing fails

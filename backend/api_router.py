@@ -12,12 +12,12 @@ app = FastAPI(
     description="""
     ## 🍔 Food Recommender API
     
-    A Tinder-style food recommendation app that helps users discover food items by swiping through restaurant menus with GPT-powered personalized suggestions.
+    A Tinder-style food recommendation app that helps users discover food items by swiping through restaurant menus with Claude Haiku 3 AI-powered personalized suggestions.
     
     ### Key Features:
     - **Google OAuth Authentication**: Secure login with Google accounts
     - **Restaurant Discovery**: Browse restaurants via DoorDash, Google Maps, and Beli integrations
-    - **Personalized Recommendations**: AI-powered food suggestions based on user preferences and taste profiles
+    - **Personalized Recommendations**: Claude Haiku 3 AI-powered food suggestions based on user preferences and taste profiles
     - **User Profiles**: Manage dietary preferences, allergies, and taste profiles
     - **Swipe Interface**: Tinder-style interface for discovering food items
     
@@ -35,7 +35,7 @@ app = FastAPI(
     - **DoorDash**: Restaurant listings and menus
     - **Google Maps**: Restaurant reviews and place details
     - **Beli**: Community recommendations and top items
-    - **OpenAI GPT**: Personalized recommendation engine
+    - **Claude Haiku 3**: Personalized recommendation engine
     """,
     version="1.0.0",
     docs_url="/docs",

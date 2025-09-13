@@ -12,10 +12,20 @@ from datetime import datetime
 from typing import List
 import uuid
 import json
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from util.chat.gpt_client import ClaudeClient
+from config import settings
 
 router = APIRouter(prefix="/recs", tags=["recommendations"])
 
-# Mock recommendation engine - replace with actual GPT integration later
+# Initialize Claude client
+claude_client = ClaudeClient(settings.ANTHROPIC_API_KEY)
+
+# Mock recommendation engine - replace with actual Claude integration later
 def generate_recommendation_mock(context: RecommendationContext, restaurant_id: str) -> FoodItemRecommendation:
     """Mock recommendation generation - replace with actual GPT call"""
     
@@ -213,15 +223,35 @@ async def get_recommendation(
             request.curr_dislikes
         )
         
-        # Generate recommendation using mock function
-        # In real implementation, this would call GPT with the context
-        recommendation = generate_recommendation_mock(context, restaurant_id)
+        # Generate recommendation using Claude
+        claude_response = await claude_client.generate_food_recommendation(
+            user_profile=context.user_profile,
+            restaurant_items=context.restaurant_items,
+            reviews=context.restaurant_reviews,
+            community_favorites=context.top_community_items,
+            current_dislikes=context.current_dislikes,
+            restaurant_name=f"Restaurant {restaurant_id}"
+        )
+        
+        # Convert Claude response to FoodItemRecommendation
+        recommendation = FoodItemRecommendation(
+            id=f"claude_rec_{uuid.uuid4()}",
+            name=claude_response.get("recommended_item", "Chef's Special"),
+            description="AI-recommended item based on your preferences",
+            price=15.99,  # Default price - would come from menu data in real implementation
+            category="AI Recommendation",
+            ingredients=[],
+            allergens=[],
+            calories=300,
+            reviews=[],
+            reasoning=claude_response.get("reasoning", "Recommended by our AI based on your taste profile")
+        )
         
         # Generate session ID for tracking
         session_id = str(uuid.uuid4())
         
-        # Calculate confidence score (mock)
-        confidence_score = 0.85
+        # Use confidence score from Claude response
+        confidence_score = claude_response.get("confidence", 0.85)
         
         return RecommendationResponse(
             item=recommendation,

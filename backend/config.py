@@ -19,8 +19,8 @@ class Settings:
     # Google OAuth Configuration
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "your-google-client-id")
     
-    # OpenAI Configuration
-    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
+    # Anthropic Claude Configuration
+    ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
     
     # External API Keys
     DOORDASH_API_KEY: Optional[str] = os.getenv("DOORDASH_API_KEY")
