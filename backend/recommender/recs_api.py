@@ -136,13 +136,74 @@ async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_d
         session_history=[]
     )
 
-@router.post("/{restaurant_id}", response_model=RecommendationResponse)
+@router.post("/{restaurant_id}", 
+             response_model=RecommendationResponse,
+             summary="Get AI Food Recommendation",
+             description="Get a personalized food recommendation using AI analysis of user preferences, restaurant menu, and community data",
+             response_description="AI-generated food recommendation with reasoning and confidence score",
+             responses={
+                 200: {
+                     "description": "Recommendation generated successfully",
+                     "content": {
+                         "application/json": {
+                             "example": {
+                                 "item": {
+                                     "id": "rec_1",
+                                     "name": "Spicy Tuna Roll",
+                                     "description": "Fresh tuna with spicy mayo and cucumber",
+                                     "price": 13.99,
+                                     "category": "Sushi Rolls",
+                                     "ingredients": ["tuna", "spicy mayo", "cucumber", "nori"],
+                                     "allergens": ["fish"],
+                                     "calories": 290,
+                                     "reviews": [
+                                         {
+                                             "author": "foodie_mike",
+                                             "rating": 5,
+                                             "text": "Absolutely delicious! Highly recommend.",
+                                             "date": "2024-01-15"
+                                         }
+                                     ],
+                                     "reasoning": "Based on your preference for umami flavors and seafood, this spicy tuna roll offers the perfect balance of heat and freshness."
+                                 },
+                                 "confidence_score": 0.85,
+                                 "session_id": "uuid-string",
+                                 "alternatives": []
+                             }
+                         }
+                     }
+                 },
+                 500: {
+                     "description": "Recommendation generation failed",
+                     "content": {
+                         "application/json": {
+                             "example": {"detail": "Failed to generate recommendation: AI service unavailable"}
+                         }
+                     }
+                 }
+             })
 async def get_recommendation(
     restaurant_id: str,
     request: RecommendationRequest,
     current_user: UserResponse = Depends(get_current_user)
 ):
-    """Get GPT-powered food recommendation for a restaurant"""
+    """
+    Generate a personalized food recommendation using AI.
+    
+    Analyzes user taste profile, current dislikes, restaurant menu, reviews,
+    and community data to suggest the best food item with detailed reasoning.
+    
+    Args:
+        restaurant_id (str): Unique identifier for the restaurant
+        request (RecommendationRequest): Current session dislikes and preferences
+        current_user: Injected current user from JWT token
+        
+    Returns:
+        RecommendationResponse: AI-generated recommendation with confidence score
+        
+    Raises:
+        HTTPException: 500 if recommendation generation fails
+    """
     
     try:
         # Gather all context for the recommendation
@@ -175,12 +236,50 @@ async def get_recommendation(
             detail=f"Failed to generate recommendation: {str(e)}"
         )
 
-@router.get("/{restaurant_id}/context")
+@router.get("/{restaurant_id}/context",
+            summary="Get Recommendation Context",
+            description="Retrieve the data context used for generating recommendations (useful for debugging and understanding AI decisions)",
+            response_description="Summary of user profile, restaurant data, and community insights used for recommendations",
+            responses={
+                200: {
+                    "description": "Context retrieved successfully",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "user_profile_summary": {
+                                    "dietary_restrictions": [],
+                                    "cuisine_preferences": [{"cuisine_type": "Japanese", "preference_level": 5}],
+                                    "flavor_profile": {
+                                        "spicy_tolerance": 4,
+                                        "umami_preference": 5,
+                                        "sweet_preference": 3
+                                    }
+                                },
+                                "available_items_count": 25,
+                                "reviews_count": 127,
+                                "community_favorites_count": 8
+                            }
+                        }
+                    }
+                }
+            })
 async def get_recommendation_context(
     restaurant_id: str,
     current_user: UserResponse = Depends(get_current_user)
 ):
-    """Get the context that would be used for recommendations (for debugging)"""
+    """
+    Get the data context used for generating recommendations.
+    
+    Useful for debugging and understanding how the AI makes decisions.
+    Shows user profile summary, available menu items, reviews, and community data.
+    
+    Args:
+        restaurant_id (str): Unique identifier for the restaurant
+        current_user: Injected current user from JWT token
+        
+    Returns:
+        dict: Summary of recommendation context data
+    """
     
     context = await gather_recommendation_context(
         current_user.id,
