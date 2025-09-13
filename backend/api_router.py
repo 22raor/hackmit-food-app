@@ -1,11 +1,28 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from auth.auth_api import router as auth_router
-from user_profile.profile_api import router as profile_router
+from user_profile.profile_api import router as user_profile_router
 from food_info.info_api import router as food_info_router
 from recommender.recs_api import router as recommender_router
 from config import settings
+from database import init_db
 import uvicorn
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Initializing database...")
+    init_db()
+    logger.info("Database initialized successfully")
+    yield
+    # Shutdown
+    logger.info("Application shutdown")
 
 app = FastAPI(
     title="Food Recommender API",
@@ -57,7 +74,8 @@ app = FastAPI(
             "url": "https://api.foodrecommender.com",
             "description": "Production server"
         }
-    ]
+    ],
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -115,24 +133,20 @@ async def root():
     }
 
 app.include_router(auth_router)
-app.include_router(profile_router)
+app.include_router(user_profile_router)
 app.include_router(food_info_router)
 app.include_router(recommender_router)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Global exception handler for unhandled errors"""
-    from fastapi import status
-    return HTTPException(
+    from fastapi import HTTPException, status
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=f"Internal server error: {str(exc)}"
+        content={"detail": f"Internal server error: {str(exc)}"}
     )
 
+
 if __name__ == "__main__":
-    uvicorn.run(
-        "api_router:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG,
-        log_level="info"
-    )
+    uvicorn.run(app, host=settings.HOST, port=settings.PORT, reload=settings.DEBUG, log_level="info")

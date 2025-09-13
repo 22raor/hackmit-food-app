@@ -1,16 +1,21 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from .types.auth_types import GoogleAuthRequest, UserResponse, LoginResponse, TokenData
-from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from typing import Optional
 import uuid
 import sys
 import os
+import jwt
+from sqlalchemy.orm import Session
 
-# Add parent directory to path for config import
+# Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from auth.types.auth_types import GoogleAuthRequest, LoginResponse, UserResponse
 from config import settings
+from util.auth.jwt_handler import create_access_token, verify_token
+from database import get_db
+from models import User
 
 # Optional Google OAuth imports for production
 try:
@@ -23,8 +28,30 @@ except ImportError:
 router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer()
 
-# Mock database - replace with actual database later
-MOCK_USERS_DB = {}
+# Database functions
+def get_user_by_google_id(db: Session, google_id: str) -> Optional[User]:
+    """Get user by Google ID"""
+    return db.query(User).filter(User.google_id == google_id).first()
+
+def get_user_by_id(db: Session, user_id: str) -> Optional[User]:
+    """Get user by ID"""
+    return db.query(User).filter(User.id == user_id).first()
+
+def create_user(db: Session, google_user_info: dict) -> User:
+    """Create new user from Google user info"""
+    user = User(
+        id=str(uuid.uuid4()),
+        email=google_user_info.get('email'),
+        first_name=google_user_info.get('given_name', ''),
+        last_name=google_user_info.get('family_name', ''),
+        google_id=google_user_info.get('sub'),
+        profile_picture=google_user_info.get('picture'),
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 def verify_google_token(id_token_str: str) -> dict:
     """Verify Google ID token and return user info"""
@@ -62,34 +89,58 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> UserResponse:
-    """Get current authenticated user from JWT token"""
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> UserResponse:
+    """
+    Get current user from JWT token
+    
+    Args:
+        credentials: JWT token from Authorization header
+        db: Database session
+        
+    Returns:
+        UserResponse: Current user information
+        
+    Raises:
+        HTTPException: 401 if token is invalid or user not found
+    """
     try:
-        payload = jwt.decode(credentials.credentials, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_id: str = payload.get("sub")
+        # Verify JWT token
+        payload = verify_token(credentials.credentials)
+        user_id = payload.get("sub")
+        
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
+                detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        token_data = TokenData(user_id=user_id)
-    except JWTError:
+        
+        # Get user from database
+        user = get_user_by_id(db, user_id)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            google_id=user.google_id,
+            profile_picture=user.profile_picture,
+            created_at=user.created_at,
+            is_active=user.is_active
+        )
+        
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    # Mock user lookup - replace with actual database query
-    user = MOCK_USERS_DB.get(token_data.user_id)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return UserResponse(**user)
 
 @router.post("/google", 
              response_model=LoginResponse,
@@ -128,85 +179,62 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                      }
                  }
              })
-async def google_auth(auth_request: GoogleAuthRequest):
+async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get_db)):
     """
     Authenticate or register a user using Google OAuth ID token.
     
-    This endpoint handles both login and registration:
-    - If the user exists (by Google ID), they are logged in
-    - If the user doesn't exist, a new account is created
+    This endpoint accepts a Google ID token, verifies it, and either:
+    1. Logs in an existing user, or
+    2. Creates a new user account
     
     Args:
-        auth_request (GoogleAuthRequest): Contains the Google ID token
+        auth_request: Contains the Google ID token
+        db: Database session
         
     Returns:
-        LoginResponse: JWT access token, user information, and new user flag
+        LoginResponse: JWT access token and user information
         
     Raises:
         HTTPException: 401 if the Google ID token is invalid
     """
-
-    # print('validating google token')
-    # return LoginResponse(
-    #     access_token="",
-    #     token_type="bearer",
-    #     user=UserResponse(id="", email="", first_name="", last_name="", google_id="", profile_picture="", created_at=datetime.now(), is_active=True),
-    #     is_new_user=False
-    # )
     
     # Verify Google ID token
     google_user_info = verify_google_token(auth_request.id_token)
     
-    google_id = google_user_info['sub']
-    email = google_user_info['email']
-    first_name = google_user_info.get('given_name', '')
-    last_name = google_user_info.get('family_name', '')
-    profile_picture = google_user_info.get('picture')
+    # Check if user exists in database
+    google_id = google_user_info.get('sub')
+    existing_user = get_user_by_google_id(db, google_id)
     
-    # Check if user already exists by Google ID
-    existing_user = None
-    existing_user_id = None
-    
-    for uid, user_data in MOCK_USERS_DB.items():
-        if user_data.get("google_id") == google_id:
-            existing_user = user_data
-            existing_user_id = uid
-            break
-    
-    is_new_user = False
+    is_new_user = existing_user is None
     
     if existing_user:
-        # User exists - login
-        user_id = existing_user_id
+        # User exists, log them in
         user = existing_user
     else:
-        # New user - register
-        is_new_user = True
-        user_id = str(uuid.uuid4())
-        
-        user = {
-            "id": user_id,
-            "email": email,
-            "first_name": first_name,
-            "last_name": last_name,
-            "google_id": google_id,
-            "profile_picture": profile_picture,
-            "created_at": datetime.utcnow(),
-            "is_active": True
-        }
-        
-        MOCK_USERS_DB[user_id] = user
+        # Create new user
+        user = create_user(db, google_user_info)
     
-    # Create access token
-    access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user_id}, expires_delta=access_token_expires
+    # Create user response
+    user_response = UserResponse(
+        id=user.id,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        google_id=user.google_id,
+        profile_picture=user.profile_picture,
+        created_at=user.created_at,
+        is_active=user.is_active
     )
     
-    user_response = UserResponse(**user)
+    # Create JWT token
+    access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.id}, expires_delta=access_token_expires
+    )
     
     return LoginResponse(
         access_token=access_token,
+        token_type="bearer",
         user=user_response,
         is_new_user=is_new_user
     )
