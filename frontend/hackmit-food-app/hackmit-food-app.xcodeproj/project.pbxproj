@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		65503CE42E762AF9001D9AC5 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 65503CE32E762AF9001D9AC5 /* GoogleSignIn */; };
+		65503CE62E762AF9001D9AC5 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 65503CE52E762AF9001D9AC5 /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		65503CC62E762AC5001D9AC5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +34,22 @@
 		65503CCF2E762AC5001D9AC5 /* hackmit-food-appUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "hackmit-food-appUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		65503CE82E762B34001D9AC5 /* Exceptions for "hackmit-food-app" folder in "hackmit-food-app" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 65503CB42E762AC4001D9AC5 /* hackmit-food-app */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		65503CB72E762AC4001D9AC5 /* hackmit-food-app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				65503CE82E762B34001D9AC5 /* Exceptions for "hackmit-food-app" folder in "hackmit-food-app" target */,
+			);
 			path = "hackmit-food-app";
 			sourceTree = "<group>";
 		};
@@ -52,6 +70,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65503CE42E762AF9001D9AC5 /* GoogleSignIn in Frameworks */,
+				65503CE62E762AF9001D9AC5 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +132,8 @@
 			);
 			name = "hackmit-food-app";
 			packageProductDependencies = (
+				65503CE32E762AF9001D9AC5 /* GoogleSignIn */,
+				65503CE52E762AF9001D9AC5 /* GoogleSignInSwift */,
 			);
 			productName = "hackmit-food-app";
 			productReference = 65503CB52E762AC4001D9AC5 /* hackmit-food-app.app */;
@@ -195,6 +217,9 @@
 			);
 			mainGroup = 65503CAC2E762AC4001D9AC5;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				65503CE22E762AF9001D9AC5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 65503CB62E762AC4001D9AC5 /* Products */;
 			projectDirPath = "";
@@ -399,6 +424,7 @@
 				DEVELOPMENT_TEAM = L2B7SJ8Z78;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "hackmit-food-app/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -428,6 +454,7 @@
 				DEVELOPMENT_TEAM = L2B7SJ8Z78;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "hackmit-food-app/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -558,6 +585,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		65503CE22E762AF9001D9AC5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		65503CE32E762AF9001D9AC5 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 65503CE22E762AF9001D9AC5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		65503CE52E762AF9001D9AC5 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 65503CE22E762AF9001D9AC5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 65503CAD2E762AC4001D9AC5 /* Project object */;
 }
