@@ -6,12 +6,19 @@
 //
 
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct hackmit_food_appApp: App {
+    @StateObject var auth = AuthViewModel()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AuthWrapperView()
+                .environmentObject(auth)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }

@@ -13,5 +13,7 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>769173441577-6rjls2nddg04257p1npc27jolut9fktq.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>769173441577-pvbrhvt84fhk8lieukk4bgkdspl7nrgm.apps.googleusercontent.com</string>
 </dict>
 </plist>
