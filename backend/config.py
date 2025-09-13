@@ -22,10 +22,8 @@ class Settings:
     # Anthropic Claude Configuration
     ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
     
-    # External API Keys
-    DOORDASH_API_KEY: Optional[str] = os.getenv("DOORDASH_API_KEY")
+    # External API Keys (only needed if using official APIs instead of scraping)
     GOOGLE_MAPS_API_KEY: Optional[str] = os.getenv("GOOGLE_MAPS_API_KEY")
-    BELI_API_KEY: Optional[str] = os.getenv("BELI_API_KEY")
     
     # Database Configuration
     DATABASE_URL: Optional[str] = os.getenv("DATABASE_URL")

@@ -145,6 +145,15 @@ async def google_auth(auth_request: GoogleAuthRequest):
     Raises:
         HTTPException: 401 if the Google ID token is invalid
     """
+
+    # print('validating google token')
+    # return LoginResponse(
+    #     access_token="",
+    #     token_type="bearer",
+    #     user=UserResponse(id="", email="", first_name="", last_name="", google_id="", profile_picture="", created_at=datetime.now(), is_active=True),
+    #     is_new_user=False
+    # )
+    
     # Verify Google ID token
     google_user_info = verify_google_token(auth_request.id_token)
     
