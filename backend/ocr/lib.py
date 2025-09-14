@@ -94,7 +94,7 @@ def detect_with_groq(image_path):
                             "type": "text",
                             "text": '''Find all the menu items in this image and return them as an array of JSON objects containing "name" and "price".
                             The format returned should be a clean JSON array like: [{"name": "Chicken Over Rice", "price": 12.99}, {...}]. 
-                            Do not include any surrounding text or markdown backticks.'''
+                            Do not include any surrounding text or markdown backticks. If you are unable to locate any text/menu items, return an empty array with no additional information'''
                         },
                         {
                             "type": "image_url",
