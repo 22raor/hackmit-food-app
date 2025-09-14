@@ -32,7 +32,7 @@ export async function GET(
             );
         }
 
-        const data: NearbyRestaurantsResponse = await response.json();
+        const data: any = await response.json();
         return NextResponse.json(data);
     } catch (error) {
         console.error("Error fetching nearby restaurants:", error);

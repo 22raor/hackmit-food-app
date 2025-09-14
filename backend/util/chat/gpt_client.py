@@ -173,6 +173,11 @@ Make sure to:
     def _parse_claude_response(self, response_text: str) -> Dict[str, Any]:
         """Parse Claude response text into structured data"""
         try:
+            if (response_text.startswith('`')):
+                start = '```json'
+                end = '```'
+                response_text = response_text[len(start):]
+                response_text = response_text[:-len(end) + 1]
             parsed = json.loads(response_text)
             # print(f"Successfully parsed Claude response: {parsed}")
 

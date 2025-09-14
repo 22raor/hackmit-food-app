@@ -2,10 +2,8 @@
 
 import { components } from "@/types/api-types"
 
-type Restaurant = components["schemas"]["Restaurant"]
-
 interface RestaurantCardProps {
-  restaurant: Restaurant
+  restaurant: any
   onClick?: () => void
 }
 
@@ -38,15 +36,15 @@ export function RestaurantCard({ restaurant, onClick }: RestaurantCardProps) {
         </div>
 
         <p className="text-gray-600 text-sm mb-3">
-          {restaurant.location.address}
+          {restaurant.address}
         </p>
         <p className="text-gray-500 text-xs mb-3">
-          {restaurant.location.city}, {restaurant.location.state} {restaurant.location.zip_code}
+          {restaurant.city}, {restaurant.state} {restaurant.zip_code}
         </p>
 
-        {restaurant.cuisine_tags.length > 0 && (
+        {restaurant.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {restaurant.cuisine_tags.map((tag, index) => (
+            {restaurant.tags.map((tag: String, index: number) => (
               <span
                 key={index}
                 className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
