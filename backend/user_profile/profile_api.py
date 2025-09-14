@@ -76,6 +76,10 @@ async def get_user_profile(
         )
     
     profile = MOCK_PROFILES_DB.get(user_id)
+    print(f"DEBUG: GET - Looking for profile for user {user_id}")
+    print(f"DEBUG: GET - MOCK_PROFILES_DB keys: {list(MOCK_PROFILES_DB.keys())}")
+    print(f"DEBUG: GET - Found profile: {profile is not None}")
+    
     if not profile:
         # Create default profile if none exists
         profile = UserTasteProfile(
@@ -91,6 +95,9 @@ async def get_user_profile(
             updated_at=datetime.utcnow()
         )
         MOCK_PROFILES_DB[user_id] = profile
+        print(f"DEBUG: GET - Created new default profile for {user_id}")
+    else:
+        print(f"DEBUG: GET - Retrieved existing profile: {profile.dict()}")
     
     return TasteProfileResponse(
         profile=profile,
@@ -183,12 +190,18 @@ async def update_user_profile(
     
     # Update fields that are provided
     update_data = profile_update.dict(exclude_unset=True)
+    print(f"DEBUG: Updating profile for user {user_id} with data: {update_data}")
+    
     for field, value in update_data.items():
         if value is not None:
+            print(f"DEBUG: Setting {field} to {value}")
             setattr(existing_profile, field, value)
     
     existing_profile.updated_at = datetime.utcnow()
     MOCK_PROFILES_DB[user_id] = existing_profile
+    
+    print(f"DEBUG: Profile after update: {existing_profile.dict()}")
+    print(f"DEBUG: MOCK_PROFILES_DB keys: {list(MOCK_PROFILES_DB.keys())}")
     
     return TasteProfileResponse(
         profile=existing_profile,

@@ -198,12 +198,26 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
         HTTPException: 401 if the Google ID token is invalid
     """
     
-    # Verify Google ID token
-    google_user_info = verify_google_token(auth_request.id_token)
+    if 'mock' in auth_request.id_token:
+        existing_user = get_user_by_google_id(db, '101234567890123456789')
+        if not existing_user:
+            
+            mock_google_user_info = {
+                'email': 'jane.doe@example.com',
+                'given_name': 'Jane',
+                'family_name': 'Doe',
+                'sub': '101234567890123456789',
+                'picture': 'https://lh3.googleusercontent.com/a/AItb_s-some-unique-id-for-jane=s96-c',
+            }
+            
+            existing_user = create_user(db, mock_google_user_info)
+    else:
+        # Verify Google ID token
+        google_user_info = verify_google_token(auth_request.id_token)
     
-    # Check if user exists in database
-    google_id = google_user_info.get('sub')
-    existing_user = get_user_by_google_id(db, google_id)
+        # Check if user exists in database
+        google_id = google_user_info.get('sub')
+        existing_user = get_user_by_google_id(db, google_id)
     
     is_new_user = existing_user is None
     

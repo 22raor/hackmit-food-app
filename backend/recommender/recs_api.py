@@ -1,19 +1,18 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from .types.recs_types import (
-    RecommendationRequest, 
-    RecommendationResponse, 
-    FoodItemRecommendation,
-    RecommendationContext,
-    GPTPromptData
-)
+from .types.recs_types import RecommendationRequest, RecommendationResponse, FoodItemRecommendation, RecommendationContext
 from auth.auth_api import get_current_user
 from auth.types.auth_types import UserResponse
-from datetime import datetime
-from typing import List
+from config import settings
+from user_profile.profile_api import MOCK_PROFILES_DB
+from food_info.doordash.doordash_api import get_restaurant_menu
+from food_info.google_maps.gmaps_api import get_restaurant_reviews
+from food_info.beli.beli_api import get_restaurant_top_items
 import uuid
+from typing import List
 import json
 import sys
 import os
+import httpx
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -97,51 +96,65 @@ def generate_recommendation_mock(context: RecommendationContext, restaurant_id: 
     )
 
 async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_dislikes: List[str]) -> RecommendationContext:
-    """Gather all context needed for GPT recommendation"""
+    """Gather all context needed for AI recommendation by calling API functions directly"""
     
-    # In a real implementation, these would be actual API calls
-    # For now, using mock data
-    
-    mock_user_profile = {
-        "dietary_restrictions": [],
-        "cuisine_preferences": [{"cuisine_type": "Japanese", "preference_level": 5}],
-        "flavor_profile": {
-            "spicy_tolerance": 4,
-            "umami_preference": 5,
-            "sweet_preference": 3
+    # Get user profile directly from the database
+    user_profile_data = MOCK_PROFILES_DB.get(user_id)
+    if user_profile_data:
+        user_profile = {
+            "dietary_restrictions": [dr.dict() for dr in user_profile_data.dietary_restrictions],
+            "cuisine_preferences": user_profile_data.cuisine_preferences,
+            "flavor_profile": user_profile_data.flavor_profile,
+            "liked_foods": user_profile_data.liked_foods,
+            "disliked_foods": user_profile_data.disliked_foods
         }
-    }
-    
-    mock_restaurant_items = [
-        {
-            "name": "Dragon Roll",
-            "description": "Shrimp tempura roll topped with avocado and eel sauce",
-            "price": 14.99,
-            "category": "Sushi Rolls"
+    else:
+        user_profile = {
+            "dietary_restrictions": [],
+            "cuisine_preferences": [],
+            "flavor_profile": {},
+            "liked_foods": [],
+            "disliked_foods": []
         }
-    ]
     
-    mock_reviews = [
-        {
-            "author": "john_d",
-            "rating": 5,
-            "text": "Amazing sushi! The Dragon Roll was absolutely delicious."
-        }
-    ]
+    # Get restaurant menu directly
+    try:
+        menu_response = await get_restaurant_menu(restaurant_id)
+        restaurant_items = menu_response.items if menu_response else []
+        # Convert to dict format for Claude
+        restaurant_items = [item.dict() for item in restaurant_items]
+    except Exception as e:
+        print(f"Error getting menu: {e}")
+        restaurant_items = []
     
-    mock_community_items = [
-        {
-            "name": "Dragon Roll",
-            "popularity_score": 95.0,
-            "friend_recommendations": 8
-        }
-    ]
+    # Get restaurant reviews directly
+    try:
+        reviews_response = await get_restaurant_reviews(restaurant_id)
+        restaurant_reviews = reviews_response.reviews if reviews_response else []
+        # Convert to dict format for Claude
+        restaurant_reviews = [review.dict() for review in restaurant_reviews]
+    except Exception as e:
+        print(f"Error getting reviews: {e}")
+        restaurant_reviews = []
+    
+    # Get community top items directly
+    try:
+        # Create a mock user for the function call
+        from auth.types.auth_types import UserResponse
+        mock_user = UserResponse(id=user_id, email="mock@example.com", name="Mock User")
+        top_items_response = await get_restaurant_top_items(restaurant_id, 10, mock_user)
+        top_community_items = top_items_response.top_items if top_items_response else []
+        # Convert to dict format for Claude
+        top_community_items = [item.dict() for item in top_community_items]
+    except Exception as e:
+        print(f"Error getting top items: {e}")
+        top_community_items = []
     
     return RecommendationContext(
-        user_profile=mock_user_profile,
-        restaurant_items=mock_restaurant_items,
-        restaurant_reviews=mock_reviews,
-        top_community_items=mock_community_items,
+        user_profile=user_profile,
+        restaurant_items=restaurant_items,
+        restaurant_reviews=restaurant_reviews,
+        top_community_items=top_community_items,
         current_dislikes=curr_dislikes,
         session_history=[]
     )
@@ -223,6 +236,9 @@ async def get_recommendation(
             request.curr_dislikes
         )
         
+        print("DEBUG: Context for recs")
+        print(context)
+
         # Generate recommendation using Claude
         claude_response = await claude_client.generate_food_recommendation(
             user_profile=context.user_profile,
