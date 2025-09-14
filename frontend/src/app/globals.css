@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f5f6f8;
   --foreground: #171717;
+  --card-background: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #555555;
+  --text-tertiary: #313131;
+  --border-color: #e6e6e6;
+  --button-dark: #212528;
 }
 
 @theme inline {
@@ -12,15 +18,141 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Mobile-first responsive design */
+.mobile-container {
+  width: 100%;
+  max-width: 393px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--background);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Status bar styling for mobile */
+.status-bar {
+  height: 54px;
+  background: var(--background);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+/* Responsive breakpoints */
+@media (min-width: 394px) {
+  .mobile-container {
+    box-shadow: 0 0 0 1px #e5e7eb;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-container {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border-radius: 24px;
+    margin: 2rem auto;
+    min-height: calc(100vh - 4rem);
+    max-width: 800px;
+  }
+
+  /* Multi-column layouts for larger screens */
+  .desktop-two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .desktop-restaurant-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-container {
+    margin: 4rem auto;
+    min-height: calc(100vh - 8rem);
+    max-width: 1000px;
+  }
+
+  .desktop-restaurant-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  /* Larger text on desktop */
+  .desktop-enhanced-text {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .mobile-container {
+    max-width: 1200px;
+  }
+
+  .desktop-restaurant-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+
+  .desktop-three-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+/* Ensure proper touch targets for mobile */
+@media (max-width: 393px) {
+  button {
+    min-height: 44px;
+  }
+
+  input[type="range"] {
+    height: 44px;
+  }
+}
+
+/* Custom slider styles */
+.slider-custom {
+  background: linear-gradient(to right, #212528 0%, #212528 var(--slider-progress, 50%), #ffffff var(--slider-progress, 50%), #ffffff 100%);
+  outline: none;
+  border: 1px solid #e6e6e6;
+}
+
+.slider-custom::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #000000;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider-custom::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #000000;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }

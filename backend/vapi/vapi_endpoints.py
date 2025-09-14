@@ -43,6 +43,7 @@ class VapiRequest(BaseModel):
     message: Message
 
 
+
 @router.post("/item-cart")
 async def get_user_cart(request: VapiRequest):
     """Get Items currently in the user cart for the session."""

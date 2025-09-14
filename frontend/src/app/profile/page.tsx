@@ -2,9 +2,9 @@
 
 import { useUser } from "@/hooks/useUser"
 import { AuthFailurePage } from "@/components/auth-failure-page"
-import { LandingPage } from "@/components/landing-page"
+import { MainContentView } from "@/components/main-content-view"
 
-export default function Home() {
+export default function ProfilePage() {
   const { user, loading, error, isAuthenticated } = useUser()
 
   if (loading) {
@@ -22,5 +22,5 @@ export default function Home() {
     return <AuthFailurePage />
   }
 
-  return <LandingPage />
+  return <MainContentView user={user} error={null} />
 }

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import "./globals.css";
@@ -14,24 +14,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PWA App",
-  description: "Best PWA App in the world",
-  applicationName: "PWA App",
+  title: "Foodly",
+  description: "Your personalized food discovery app",
+  applicationName: "Foodly",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "PWA App",
+    title: "Foodly",
   },
   formatDetection: {
     telephone: false,
-  },
-  themeColor: "#000000",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    minimumScale: 1,
-    userScalable: false,
-    viewportFit: "cover",
   },
   manifest: "/manifest.json",
   icons: {
@@ -39,6 +31,15 @@ export const metadata: Metadata = {
     shortcut: "/favicon.jpg",
     apple: "/favicon.jpg",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#f5f6f8",
 };
 
 export default function RootLayout({
