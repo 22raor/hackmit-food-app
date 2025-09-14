@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		65503CE42E762AF9001D9AC5 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 65503CE32E762AF9001D9AC5 /* GoogleSignIn */; };
 		65503CE62E762AF9001D9AC5 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 65503CE52E762AF9001D9AC5 /* GoogleSignInSwift */; };
+		65C685ED2E76490600B360E9 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 65C685EC2E76490600B360E9 /* OpenAPIRuntime */; };
+		65C685EF2E76490D00B360E9 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 65C685EE2E76490D00B360E9 /* OpenAPIURLSession */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,7 +72,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65C685EF2E76490D00B360E9 /* OpenAPIURLSession in Frameworks */,
 				65503CE42E762AF9001D9AC5 /* GoogleSignIn in Frameworks */,
+				65C685ED2E76490600B360E9 /* OpenAPIRuntime in Frameworks */,
 				65503CE62E762AF9001D9AC5 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -98,6 +102,7 @@
 				65503CB72E762AC4001D9AC5 /* hackmit-food-app */,
 				65503CC82E762AC5001D9AC5 /* hackmit-food-appTests */,
 				65503CD22E762AC5001D9AC5 /* hackmit-food-appUITests */,
+				65C685EB2E76490600B360E9 /* Frameworks */,
 				65503CB62E762AC4001D9AC5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -110,6 +115,13 @@
 				65503CCF2E762AC5001D9AC5 /* hackmit-food-appUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		65C685EB2E76490600B360E9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -126,6 +138,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				65085FE82E7647D500B2EEF4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				65503CB72E762AC4001D9AC5 /* hackmit-food-app */,
@@ -134,6 +147,8 @@
 			packageProductDependencies = (
 				65503CE32E762AF9001D9AC5 /* GoogleSignIn */,
 				65503CE52E762AF9001D9AC5 /* GoogleSignInSwift */,
+				65C685EC2E76490600B360E9 /* OpenAPIRuntime */,
+				65C685EE2E76490D00B360E9 /* OpenAPIURLSession */,
 			);
 			productName = "hackmit-food-app";
 			productReference = 65503CB52E762AC4001D9AC5 /* hackmit-food-app.app */;
@@ -219,6 +234,9 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				65503CE22E762AF9001D9AC5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				65085FE02E76460000B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
+				65085FE12E76471900B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
+				65085FE42E7647BB00B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 65503CB62E762AC4001D9AC5 /* Products */;
@@ -281,6 +299,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		65085FE82E7647D500B2EEF4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 65085FE72E7647D500B2EEF4 /* OpenAPIGenerator */;
+		};
 		65503CC72E762AC5001D9AC5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 65503CB42E762AC4001D9AC5 /* hackmit-food-app */;
@@ -587,6 +609,30 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		65085FE02E76460000B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-generator";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.10.2;
+			};
+		};
+		65085FE12E76471900B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.8.2;
+			};
+		};
+		65085FE42E7647BB00B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
 		65503CE22E762AF9001D9AC5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
@@ -598,6 +644,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		65085FE72E7647D500B2EEF4 /* OpenAPIGenerator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 65085FE02E76460000B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
+			productName = "plugin:OpenAPIGenerator";
+		};
 		65503CE32E762AF9001D9AC5 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 65503CE22E762AF9001D9AC5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
@@ -607,6 +658,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 65503CE22E762AF9001D9AC5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		65C685EC2E76490600B360E9 /* OpenAPIRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 65085FE12E76471900B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
+			productName = OpenAPIRuntime;
+		};
+		65C685EE2E76490D00B360E9 /* OpenAPIURLSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 65085FE42E7647BB00B2EEF4 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
+			productName = OpenAPIURLSession;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

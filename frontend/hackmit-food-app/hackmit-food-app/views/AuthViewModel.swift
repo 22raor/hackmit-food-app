@@ -9,31 +9,78 @@
 import SwiftUI
 import GoogleSignIn
 import GoogleSignInSwift
+import OpenAPIURLSession
 
 class AuthViewModel: ObservableObject {
     @Published var userSignedIn = false
     @Published var idToken: String? = nil
+    @Published var client: Client? = nil
+    
+    func exchangeGoogleTokenForBackendAuth(googleIdToken: String) async throws {
+        guard let serverURL = try? Servers.Server1.url() else {
+            throw NSError(domain: "AuthError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid server URL"])
+        }
+        
+        print(googleIdToken)
+        
+        let tempClient = Client(serverURL: serverURL, transport: URLSessionTransport())
+        
+        let response = try await tempClient.googleAuthAuthGooglePost(.init(
+            body: .json(Components.Schemas.GoogleAuthRequest(idToken: googleIdToken))
+        ))
+        
+        switch response {
+        case .ok(let success):
+            if case .json(let loginResponse) = success.body {
+                let backendToken = loginResponse.accessToken
+                
+                // Set up authenticated client
+                self.client = Client(
+                    serverURL: serverURL,
+                    transport: URLSessionTransport(),
+                    middlewares: [BearerAuthenticationMiddleware(token: backendToken)]
+                )
+                
+                self.userSignedIn = true
+                return
+            }
+        case .unauthorized(_):
+            throw NSError(domain: "AuthError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Token exchange failed"])
+        case .unprocessableContent(_):
+            throw NSError(domain: "AuthError", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid token"])
+        case .undocumented(let statusCode, _):
+            throw NSError(domain: "AuthError", code: 4, userInfo: [NSLocalizedDescriptionKey: "Unexpected response: \(statusCode)"])
+        }
+    }
 
-    func signIn() {
-        guard let rootVC = UIApplication.shared.connectedScenes
-                .compactMap({ ($0 as? UIWindowScene)?.windows.first?.rootViewController })
-                .first else { return }
+        func signIn() {
+            guard let rootVC = UIApplication.shared.connectedScenes
+                    .compactMap({ ($0 as? UIWindowScene)?.windows.first?.rootViewController })
+                    .first else { return }
 
-        GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { signInResult, error in
-            guard error == nil, let signInResult = signInResult else { return }
+            GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { signInResult, error in
+                guard error == nil, let signInResult = signInResult else { return }
 
-            // Refresh ID token if needed
-            signInResult.user.refreshTokensIfNeeded { user, error in
-                guard error == nil, let user = user else { return }
+                // Refresh ID token if needed
+                signInResult.user.refreshTokensIfNeeded { user, error in
+                    guard error == nil, let user = user else { return }
 
-                DispatchQueue.main.async {
-                    self.idToken = user.idToken?.tokenString
-                    self.userSignedIn = true
-                    print("Fresh JWT: \(user.idToken?.tokenString ?? "none")")
+                    DispatchQueue.main.async {
+                        Task {
+                            do {
+                                if let googleIdToken = user.idToken?.tokenString {
+                                    try await self.exchangeGoogleTokenForBackendAuth(googleIdToken: googleIdToken)
+                                    print("Successfully authenticated with backend")
+                                }
+                            } catch {
+                                print("Authentication failed: \(error.localizedDescription)")
+                                self.userSignedIn = false
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
 
     func signOut() {
         GIDSignIn.sharedInstance.signOut()
