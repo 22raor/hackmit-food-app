@@ -1,21 +1,26 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { components } from "@/types/api-types"
 import { RestaurantCard } from "./restaurant-card"
+import { RecommendationDisplay } from "./recommendation-display"
 
 type User = components["schemas"]["UserResponse"]
 type NearbyRestaurantsResponse = components["schemas"]["NearbyRestaurantsResponse"]
 type Restaurant = components["schemas"]["Restaurant"]
+type FoodItemRecommendation = components["schemas"]["FoodItemRecommendation"]
 
 interface RestaurantsViewProps {
   user?: User | null
 }
 
 export function RestaurantsView({ user }: RestaurantsViewProps) {
+  const router = useRouter()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
 
   useEffect(() => {
     fetchNearbyRestaurants()
@@ -44,6 +49,20 @@ export function RestaurantsView({ user }: RestaurantsViewProps) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRestaurantClick = (restaurant: Restaurant) => {
+    setSelectedRestaurant(restaurant)
+  }
+
+  const handleRecommendationClose = () => {
+    setSelectedRestaurant(null)
+  }
+
+  const handleRecommendationApprove = (item: FoodItemRecommendation) => {
+    // Store the item in localStorage and navigate to the recommendation page
+    localStorage.setItem(`recommendation_${item.id}`, JSON.stringify(item))
+    router.push(`/recommendation/${item.id}`)
   }
 
   if (loading) {
@@ -88,11 +107,24 @@ export function RestaurantsView({ user }: RestaurantsViewProps) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {restaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              <RestaurantCard
+                key={restaurant.id}
+                restaurant={restaurant}
+                onClick={() => handleRestaurantClick(restaurant)}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {selectedRestaurant && (
+        <RecommendationDisplay
+          restaurantId={selectedRestaurant.id}
+          restaurantName={selectedRestaurant.name}
+          onClose={handleRecommendationClose}
+          onApprove={handleRecommendationApprove}
+        />
+      )}
     </div>
   )
 }
