@@ -26,18 +26,18 @@ class APITester:
         self.base_url = base_url
         self.jwt_token: Optional[str] = None
         self.user_id: Optional[str] = None
-        
+
     def _get_headers(self) -> dict:
         """Get headers with JWT token if available"""
         headers = {"Content-Type": "application/json"}
         if self.jwt_token:
             headers["Authorization"] = f"Bearer {self.jwt_token}"
         return headers
-    
+
     async def test_google_auth(self, google_id_token: str) -> bool:
         """Test Google OAuth authentication"""
         print("🔐 Testing Google OAuth authentication...")
-        
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
@@ -45,12 +45,12 @@ class APITester:
                     json={"id_token": google_id_token},
                     headers={"Content-Type": "application/json"}
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     self.jwt_token = data.get("access_token")
                     self.user_id = data.get("user", {}).get("id")
-                    
+
                     print(f"✅ Authentication successful!")
                     print(f"   User ID: {self.user_id}")
                     print(f"   JWT Token: {self.jwt_token[:20]}...")
@@ -60,26 +60,26 @@ class APITester:
                     print(f"❌ Authentication failed: {response.status_code}")
                     print(f"   Response: {response.text}")
                     return False
-                    
+
             except Exception as e:
                 print(f"❌ Authentication error: {str(e)}")
                 return False
-    
+
     async def test_auth_me(self) -> bool:
         """Test /auth/me endpoint to verify JWT token"""
         print("\n👤 Testing /auth/me endpoint...")
-        
+
         if not self.jwt_token:
             print("❌ No JWT token available")
             return False
-            
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
                     f"{self.base_url}/auth/me",
                     headers=self._get_headers()
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     print(f"✅ Auth verification successful!")
@@ -88,19 +88,19 @@ class APITester:
                 else:
                     print(f"❌ Auth verification failed: {response.status_code}")
                     return False
-                    
+
             except Exception as e:
                 print(f"❌ Auth verification error: {str(e)}")
                 return False
-    
+
     async def test_update_user_profile(self) -> bool:
         """Test updating user taste profile"""
         print("\n🍽️ Testing user profile update...")
-        
+
         if not self.user_id:
             print("❌ No user ID available")
             return False
-            
+
         profile_data = {
             "dietary_restrictions": [
                 {"name": "vegetarian", "severity": "preference"}
@@ -123,7 +123,7 @@ class APITester:
             ],
             "price_range_preference": "mid-range"
         }
-        
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
@@ -131,7 +131,7 @@ class APITester:
                     json=profile_data,
                     headers=self._get_headers()
                 )
-                
+
                 if response.status_code == 200:
                     print("✅ Profile update successful!")
                     print(f"   Updated dietary restrictions: {profile_data['dietary_restrictions']}")
@@ -141,26 +141,26 @@ class APITester:
                     print(f"❌ Profile update failed: {response.status_code}")
                     print(f"   Response: {response.text}")
                     return False
-                    
+
             except Exception as e:
                 print(f"❌ Profile update error: {str(e)}")
                 return False
-    
+
     async def test_get_user_profile(self) -> bool:
         """Test getting user taste profile to verify changes"""
         print("\n📋 Testing user profile retrieval...")
-        
+
         if not self.user_id:
             print("❌ No user ID available")
             return False
-            
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
                     f"{self.base_url}/user_profile/{self.user_id}",
                     headers=self._get_headers()
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     print("✅ Profile retrieval successful!")
@@ -172,26 +172,26 @@ class APITester:
                 else:
                     print(f"❌ Profile retrieval failed: {response.status_code}")
                     return False
-                    
+
             except Exception as e:
                 print(f"❌ Profile retrieval error: {str(e)}")
                 return False
-    
+
     async def test_get_restaurants(self) -> Optional[str]:
         """Test getting restaurant list and return a restaurant ID"""
         print("\n🏪 Testing restaurant list retrieval...")
-        
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
                     f"{self.base_url}/restaurants/",
                     headers=self._get_headers()
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     restaurants = data if isinstance(data, list) else data.get('restaurants', [])
-                    
+
                     if restaurants:
                         restaurant_id = restaurants[0].get('id')
                         restaurant_name = restaurants[0].get('name', 'Unknown')
@@ -205,19 +205,19 @@ class APITester:
                 else:
                     print(f"❌ Restaurant retrieval failed: {response.status_code}")
                     return None
-                    
+
             except Exception as e:
                 print(f"❌ Restaurant retrieval error: {str(e)}")
                 return None
-    
+
     async def test_get_recommendation(self, restaurant_id: str) -> bool:
         """Test getting AI recommendation for a restaurant"""
         print(f"\n🤖 Testing AI recommendation for restaurant {restaurant_id}...")
-        
+
         recommendation_data = {
             "current_dislikes": ["spicy food", "raw fish"]
         }
-        
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
@@ -225,7 +225,7 @@ class APITester:
                     json=recommendation_data,
                     headers=self._get_headers()
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     item = data.get('item', {})
@@ -239,42 +239,42 @@ class APITester:
                     print(f"❌ Recommendation failed: {response.status_code}")
                     print(f"   Response: {response.text}")
                     return False
-                    
+
             except Exception as e:
                 print(f"❌ Recommendation error: {str(e)}")
                 return False
-    
+
     async def run_full_test(self, google_id_token: str) -> bool:
         """Run the complete test suite"""
         print("🚀 Starting Food Recommender API Test Suite")
         print("=" * 50)
-        
+
         # Step 1: Authenticate
         if not await self.test_google_auth(google_id_token):
             return False
-        
+
         # Step 2: Verify authentication
         if not await self.test_auth_me():
             return False
-        
+
         # Step 3: Update user profile
         if not await self.test_update_user_profile():
             return False
-        
+
         # Step 4: Verify profile changes
         if not await self.test_get_user_profile():
             return False
-        
+
         # Step 5: Get restaurants
         restaurant_id = await self.test_get_restaurants()
         if not restaurant_id:
             print("⚠️ Skipping recommendation test - no restaurant ID available")
             return True
-        
+
         # Step 6: Get AI recommendation
         if not await self.test_get_recommendation(restaurant_id):
             return False
-        
+
         print("\n" + "=" * 50)
         print("🎉 All tests completed successfully!")
         return True
@@ -284,19 +284,19 @@ async def main():
     parser.add_argument("--google-id", help="Google OAuth ID token")
     parser.add_argument("--mock-google-id", help="Mock Google ID (email) for testing")
     parser.add_argument("--base-url", default="http://localhost:8000", help="API base URL")
-    
+
     args = parser.parse_args()
-    
+
     # if not args.google_id and not args.mock_google_id:
     #     print("❌ Please provide either --google-id or --mock-google-id")
     #     sys.exit(1)
-    
+
     # Use mock token if provided, otherwise use real Google ID token
     # google_token = 'mc..gDAMcrXIg_e9wEGLB5NWOzl5vDt9YlKHqniHUDbRdzlqV-yb96GHfjzxt96Zl7IcWNzgFdn7ZgROFSSU_s6FzOIJCjigeiL8raPr-wPvleNJbrd5qSaK9YZ6uEOtEGEM0LB_2LaObRGROjQNCG6yPDcHNe_MMbAkfj7nwgwuaT0Fv46qX5algMPf08t9rQss9rbBV2ZHGQX_j2ma8Dt43_ZTXt1IfGXv5SzA5T6k52ySXvdKqEWARsFZiI1EClCSPFV-oqbkzD5kuqqBTWxvKrkFbT4iNdgeF27yB_hhy0ZeXUBr1dolzGfpyJYiDLw3ZDd74ccoDsit-5AaWkvrpw'
     google_token = 'mock'
 
     tester = APITester(args.base_url)
-    
+
     try:
         success = await tester.run_full_test(google_token)
         sys.exit(0 if success else 1)
