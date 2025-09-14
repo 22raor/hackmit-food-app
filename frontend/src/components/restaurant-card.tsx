@@ -6,11 +6,15 @@ type Restaurant = components["schemas"]["Restaurant"]
 
 interface RestaurantCardProps {
   restaurant: Restaurant
+  onClick?: () => void
 }
 
-export function RestaurantCard({ restaurant }: RestaurantCardProps) {
+export function RestaurantCard({ restaurant, onClick }: RestaurantCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+    <div
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={onClick}
+    >
       {restaurant.image_url && (
         <img
           src={restaurant.image_url}
