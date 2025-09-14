@@ -1,11 +1,23 @@
 """
 SQLAlchemy models for the Food Recommender API
 """
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, Float, ForeignKey, JSON
+
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    Boolean,
+    Text,
+    Float,
+    ForeignKey,
+    JSON,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
 import uuid
+
 
 class User(Base):
     __tablename__ = "users"
@@ -23,6 +35,7 @@ class User(Base):
     # Relationship to taste profile
     taste_profile = relationship("TasteProfile", back_populates="user", uselist=False)
 
+
 class TasteProfile(Base):
     __tablename__ = "taste_profiles"
 
@@ -30,7 +43,9 @@ class TasteProfile(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
 
     # Dietary preferences
-    dietary_restrictions = Column(JSON, default=list)  # ["vegetarian", "gluten_free", etc.]
+    dietary_restrictions = Column(
+        JSON, default=list
+    )  # ["vegetarian", "gluten_free", etc.]
     allergies = Column(JSON, default=list)  # ["nuts", "dairy", etc.]
 
     # Cuisine preferences
@@ -39,7 +54,9 @@ class TasteProfile(Base):
 
     # Spice and flavor preferences
     spice_tolerance = Column(String, default="medium")  # "mild", "medium", "hot"
-    flavor_preferences = Column(JSON, default=list)  # ["sweet", "savory", "umami", etc.]
+    flavor_preferences = Column(
+        JSON, default=list
+    )  # ["sweet", "savory", "umami", etc.]
 
     # Price and health preferences
     price_range = Column(String, default="medium")  # "low", "medium", "high"
@@ -51,6 +68,7 @@ class TasteProfile(Base):
 
     # Relationship
     user = relationship("User", back_populates="taste_profile")
+
 
 class Restaurant(Base):
     __tablename__ = "restaurants"
@@ -76,6 +94,7 @@ class Restaurant(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
 
 class MenuItem(Base):
     __tablename__ = "menu_items"
@@ -105,6 +124,7 @@ class MenuItem(Base):
     # Relationship
     restaurant = relationship("Restaurant")
 
+
 class UserSwipe(Base):
     __tablename__ = "user_swipes"
 
@@ -122,6 +142,7 @@ class UserSwipe(Base):
     # Relationships
     user = relationship("User")
     menu_item = relationship("MenuItem")
+
 
 class Recommendation(Base):
     __tablename__ = "recommendations"

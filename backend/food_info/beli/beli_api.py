@@ -1,5 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from .types.beli_types import BeliTopItem, BeliRestaurantTopItems, BeliUserProfile, BeliUserRestaurantReview
+from .types.beli_types import (
+    BeliTopItem,
+    BeliRestaurantTopItems,
+    BeliUserProfile,
+    BeliUserRestaurantReview,
+)
 from auth.auth_api import get_current_user
 from auth.types.auth_types import UserResponse
 from datetime import datetime
@@ -16,20 +21,20 @@ MOCK_RESTAURANT_TOP_ITEMS = {
             BeliTopItem(
                 name="Dragon Roll",
                 photo_url="https://example.com/dragon-roll.jpg",
-                recommendation_count=23
+                recommendation_count=23,
             ),
             BeliTopItem(
                 name="Salmon Sashimi",
                 photo_url="https://example.com/salmon-sashimi.jpg",
-                recommendation_count=18
+                recommendation_count=18,
             ),
             BeliTopItem(
                 name="Miso Soup",
                 photo_url="https://example.com/miso-soup.jpg",
-                recommendation_count=12
-            )
+                recommendation_count=12,
+            ),
         ],
-        last_updated=datetime.utcnow()
+        last_updated=datetime.utcnow(),
     ),
     "rest_2": BeliRestaurantTopItems(
         restaurant_id="rest_2",
@@ -38,21 +43,21 @@ MOCK_RESTAURANT_TOP_ITEMS = {
             BeliTopItem(
                 name="Margherita Pizza",
                 photo_url="https://example.com/margherita.jpg",
-                recommendation_count=31
+                recommendation_count=31,
             ),
             BeliTopItem(
                 name="Pepperoni Pizza",
                 photo_url="https://example.com/pepperoni.jpg",
-                recommendation_count=27
+                recommendation_count=27,
             ),
             BeliTopItem(
                 name="Caesar Salad",
                 photo_url="https://example.com/caesar-salad.jpg",
-                recommendation_count=15
-            )
+                recommendation_count=15,
+            ),
         ],
-        last_updated=datetime.utcnow()
-    )
+        last_updated=datetime.utcnow(),
+    ),
 }
 
 MOCK_USER_PROFILES = {
@@ -65,43 +70,46 @@ MOCK_USER_PROFILES = {
                 restaurant_id="rest_1",
                 rating=9,
                 notes="Amazing sushi! Fresh ingredients and creative rolls.",
-                date_reviewed=datetime.utcnow()
+                date_reviewed=datetime.utcnow(),
             ),
             BeliUserRestaurantReview(
                 restaurant_name="Tony's Pizza",
                 restaurant_id="rest_2",
                 rating=7,
                 notes="Good pizza but service was slow.",
-                date_reviewed=datetime.utcnow()
+                date_reviewed=datetime.utcnow(),
             ),
             BeliUserRestaurantReview(
                 restaurant_name="Thai Garden",
                 restaurant_id="rest_3",
                 rating=8,
-                notes="Authentic flavors, great pad thai."
-            )
+                notes="Authentic flavors, great pad thai.",
+            ),
         ],
         total_reviews=3,
-        last_updated=datetime.utcnow()
+        last_updated=datetime.utcnow(),
     )
 }
 
-@router.get("/restaurant/{restaurant_id}/top_items", response_model=BeliRestaurantTopItems)
+
+@router.get(
+    "/restaurant/{restaurant_id}/top_items", response_model=BeliRestaurantTopItems
+)
 async def get_restaurant_top_items(
     restaurant_id: str,
     limit: Optional[int] = 10,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """Get top recommended items at a restaurant from Beli"""
     # Mock implementation - replace with actual Beli API call
     restaurant_data = MOCK_RESTAURANT_TOP_ITEMS.get(restaurant_id)
-    
+
     if not restaurant_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No Beli data found for restaurant {restaurant_id}"
+            detail=f"No Beli data found for restaurant {restaurant_id}",
         )
-    
+
     # Apply limit to top items if specified
     if limit and len(restaurant_data.top_items) > limit:
         limited_items = restaurant_data.top_items[:limit]
@@ -109,16 +117,15 @@ async def get_restaurant_top_items(
             restaurant_id=restaurant_data.restaurant_id,
             restaurant_name=restaurant_data.restaurant_name,
             top_items=limited_items,
-            last_updated=restaurant_data.last_updated
+            last_updated=restaurant_data.last_updated,
         )
-    
+
     return restaurant_data
 
 
 @router.get("/user/{user_id}/profile", response_model=BeliUserProfile)
 async def get_user_profile(
-    user_id: str,
-    current_user: UserResponse = Depends(get_current_user)
+    user_id: str, current_user: UserResponse = Depends(get_current_user)
 ):
     """Get a user's Beli profile with restaurant reviews"""
     # Mock implementation - replace with actual Beli API call
@@ -130,8 +137,7 @@ async def get_user_profile(
             username="unknown_user",
             restaurant_reviews=[],
             total_reviews=0,
-            last_updated=datetime.utcnow()
+            last_updated=datetime.utcnow(),
         )
-    
-    return profile
 
+    return profile

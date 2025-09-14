@@ -1,13 +1,20 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from .doordash.doordash_api import router as doordash_router
 from .google_maps.gmaps_api import router as gmaps_router
 from .beli.beli_api import router as beli_router
-from .doordash.types.doordash_types import NearbyRestaurantsRequest, NearbyRestaurantsResponse, RestaurantMenu
+from .doordash.types.doordash_types import (
+    NearbyRestaurantsRequest,
+    NearbyRestaurantsResponse,
+    RestaurantMenu,
+)
 from .google_maps.types.gmaps_types import RestaurantReviews
 from .beli.types.beli_types import BeliRestaurantTopItems
 from auth.auth_api import get_current_user
 from auth.types.auth_types import UserResponse
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+import json
+import os
+import glob
 
 router = APIRouter(prefix="/restaurants", tags=["restaurants"])
 
@@ -15,284 +22,195 @@ router.include_router(doordash_router)
 router.include_router(gmaps_router)
 router.include_router(beli_router)
 
-@router.get("/", 
-           response_model=NearbyRestaurantsResponse,
-           summary="Get Restaurant List",
-           description="Get a list of restaurants (mock data for testing)",
-           response_description="List of restaurants with basic information")
+# In-memory restaurant data storage
+RESTAURANTS_CACHE: Dict[str, Dict[str, Any]] = {}
+RESTAURANTS_LIST_CACHE: List[Dict[str, Any]] = []
+
+
+def load_all_restaurants_on_startup():
+    """Load all restaurant data into memory on startup"""
+    global RESTAURANTS_CACHE, RESTAURANTS_LIST_CACHE
+
+    processed_dir = os.path.join(os.path.dirname(__file__), "processed")
+    json_files = glob.glob(os.path.join(processed_dir, "*.json"))
+
+    restaurants_list = []
+    restaurants_dict = {}
+
+    for file_path in json_files:
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                restaurant_id = data.get("id")
+
+                if restaurant_id:
+                    # Store full data in cache
+                    restaurants_dict[restaurant_id] = data
+
+                    # Create summary for list endpoint
+                    restaurant_summary = {
+                        "id": data.get("id"),
+                        "name": data.get("name"),
+                        "average_rating": data.get("average_rating"),
+                        "review_count": data.get("review_count"),
+                        "image_url": data.get("image_url"),
+                        "address": data.get("address"),
+                        "latitude": data.get("latitude"),
+                        "longitude": data.get("longitude"),
+                        "city": data.get("city"),
+                        "state": data.get("state"),
+                        "price_range": data.get("price_range"),
+                        "tags": data.get("tags", []),
+                        "place_id": data.get("place_id"),
+                        "beli_id": data.get("beli_id"),
+                    }
+                    restaurants_list.append(restaurant_summary)
+
+        except Exception as e:
+            print(f"Error loading {file_path}: {e}")
+            continue
+
+    RESTAURANTS_CACHE = restaurants_dict
+    RESTAURANTS_LIST_CACHE = restaurants_list
+    print(f"Loaded {len(restaurants_dict)} restaurants into memory")
+
+
+# Load restaurants on module import
+load_all_restaurants_on_startup()
+
+
+@router.get(
+    "/",
+    summary="Get Restaurant List",
+    description="Get a list of restaurants from in-memory cache",
+    response_description="List of restaurants with basic information",
+)
 async def get_restaurants(current_user: UserResponse = Depends(get_current_user)):
-    """Get a list of restaurants for testing purposes"""
-    # Mock restaurant data for testing
-    mock_restaurants = [
-        {
-            "id": "rest_001",
-            "name": "Sakura Sushi",
-            "cuisine_tags": ["Japanese", "Sushi"],
-            "location": {
-                "latitude": 42.3601,
-                "longitude": -71.0589,
-                "address": "123 Main St",
-                "city": "Boston",
-                "state": "MA",
-                "zip_code": "02101"
-            },
-            "rating": 4.5,
-            "price_range": "$$",
-            "image_url": "https://www.tastingtable.com/img/gallery/the-best-sushi-restaurants-in-dallas/l-intro-1695231811.jpg"
-        },
-        {
-            "id": "rest_002", 
-            "name": "Tony's Italian Kitchen",
-            "cuisine_tags": ["Italian", "Pizza"],
-            "location": {
-                "latitude": 42.3611,
-                "longitude": -71.0579,
-                "address": "456 Oak Ave",
-                "city": "Boston",
-                "state": "MA",
-                "zip_code": "02102"
-            },
-            "rating": 4.2,
-            "price_range": "$$$",
-            "image_url": "https://grimaldispizzeria.b-cdn.net/dbcwp/wp-content/uploads/2023/11/Ankeny-Int.jpg"
-        },
-        {
-            "id": "rest_003",
-            "name": "Spice Route",
-            "cuisine_tags": ["Indian", "Curry"],
-            "location": {
-                "latitude": 42.3591,
-                "longitude": -71.0599,
-                "address": "789 Elm St",
-                "city": "Boston",
-                "state": "MA",
-                "zip_code": "02103"
-            },
-            "rating": 4.7,
-            "price_range": "$$",
-            "image_url": "https://www.pittsburghmagazine.com/content/uploads/2025/01/q/j/bombay-to-burgh-photo-courtesy-of-restaurant.jpeg"}
-    ]
-    
+    """Get a list of restaurants from in-memory cache"""
     return {
-        "restaurants": mock_restaurants,
-        "total_count": len(mock_restaurants),
+        "restaurants": RESTAURANTS_LIST_CACHE,
+        "total_count": len(RESTAURANTS_LIST_CACHE),
         "search_location": {
             "latitude": 42.3601,
             "longitude": -71.0589,
             "address": "Boston, MA",
             "city": "Boston",
             "state": "MA",
-            "zip_code": "02101"
-        }
+            "zip_code": "02101",
+        },
     }
 
-@router.post("/", 
-             response_model=NearbyRestaurantsResponse,
-             summary="Get Nearby Restaurants",
-             description="Find restaurants near a specific location using DoorDash data",
-             response_description="List of nearby restaurants with basic information",
-             responses={
-                 200: {
-                     "description": "Restaurants found successfully",
-                     "content": {
-                         "application/json": {
-                             "example": {
-                                 "restaurants": [
-                                     {
-                                         "id": "restaurant_123",
-                                         "name": "Tony's Pizza",
-                                         "address": "123 Main St, City, State",
-                                         "phone": "+1-555-0123",
-                                         "rating": 4.5,
-                                         "cuisine_tags": ["italian", "pizza"],
-                                         "image_url": "https://example.com/restaurant.jpg",
-                                         "distance_miles": 0.8
-                                     }
-                                 ],
-                                 "total_count": 25,
-                                 "search_radius_miles": 5.0
-                             }
-                         }
-                     }
-                 }
-             })
+
+@router.post(
+    "/",
+    response_model=NearbyRestaurantsResponse,
+    summary="Get Nearby Restaurants",
+    description="Find restaurants near a specific location using DoorDash data",
+    response_description="List of nearby restaurants with basic information",
+    responses={
+        200: {
+            "description": "Restaurants found successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "restaurants": [
+                            {
+                                "id": "restaurant_123",
+                                "name": "Tony's Pizza",
+                                "address": "123 Main St, City, State",
+                                "phone": "+1-555-0123",
+                                "rating": 4.5,
+                                "cuisine_tags": ["italian", "pizza"],
+                                "image_url": "https://example.com/restaurant.jpg",
+                                "distance_miles": 0.8,
+                            }
+                        ],
+                        "total_count": 25,
+                        "search_radius_miles": 5.0,
+                    }
+                }
+            },
+        }
+    },
+)
 async def get_nearby_restaurants(
     request: NearbyRestaurantsRequest,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """
     Find restaurants near a specific location.
-    
+
     Uses DoorDash API to search for restaurants within the specified radius
     of the given coordinates.
-    
+
     Args:
         request (NearbyRestaurantsRequest): Search parameters including location and radius
         current_user: Injected current user from JWT token
-        
+
     Returns:
         NearbyRestaurantsResponse: List of nearby restaurants with details
     """
     # This will call the doordash endpoint
     from .doordash.doordash_api import get_nearby_restaurants as doordash_nearby
+
     return await doordash_nearby(request)
 
-@router.get("/{restaurant_id}/items", 
-            response_model=RestaurantMenu,
-            summary="Get Restaurant Menu",
-            description="Retrieve the complete menu for a specific restaurant",
-            response_description="Restaurant menu with all available items",
-            responses={
-                200: {
-                    "description": "Menu retrieved successfully",
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "restaurant_id": "restaurant_123",
-                                "restaurant_name": "Tony's Pizza",
-                                "items": [
-                                    {
-                                        "id": "item_456",
-                                        "name": "Margherita Pizza",
-                                        "description": "Fresh mozzarella, tomato sauce, basil",
-                                        "price": 18.99,
-                                        "image_url": "https://example.com/pizza.jpg"
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                },
-                404: {
-                    "description": "Restaurant not found",
-                    "content": {
-                        "application/json": {
-                            "example": {"detail": "Restaurant not found"}
-                        }
+
+def get_restaurant_by_id(restaurant_id: str) -> Optional[Dict[str, Any]]:
+    """Get restaurant data by ID from in-memory cache"""
+    return RESTAURANTS_CACHE.get(restaurant_id)
+
+
+@router.get(
+    "/{restaurant_id}/items",
+    summary="Get Restaurant Data",
+    description="Retrieve complete restaurant data including menu items for a specific restaurant",
+    response_description="Complete restaurant data with menu items",
+    responses={
+        200: {
+            "description": "Restaurant data retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "58134",
+                        "name": "Giggling Rice Thai",
+                        "average_rating": 4.7,
+                        "menu_items": [],
+                        "reviews": [],
+                        "top_items": [],
                     }
                 }
-            })
+            },
+        },
+        404: {
+            "description": "Restaurant not found",
+            "content": {
+                "application/json": {"example": {"detail": "Restaurant not found"}}
+            },
+        },
+    },
+)
 async def get_restaurant_items(
-    restaurant_id: str,
-    current_user: UserResponse = Depends(get_current_user)
+    restaurant_id: str, current_user: UserResponse = Depends(get_current_user)
 ):
     """
-    Retrieve the complete menu for a specific restaurant.
-    
-    Gets all menu items available at the restaurant including names,
-    descriptions, prices, and images.
-    
+    Retrieve complete restaurant data for a specific restaurant.
+
+    Gets all restaurant information including menu items, reviews, and top items.
+
     Args:
         restaurant_id (str): Unique identifier for the restaurant
         current_user: Injected current user from JWT token
-        
+
     Returns:
-        RestaurantMenu: Complete menu with all items
-        
+        dict: Complete restaurant data
+
     Raises:
         HTTPException: 404 if restaurant not found
     """
-    from .doordash.doordash_api import get_restaurant_menu
-    return await get_restaurant_menu(restaurant_id)
+    restaurant_data = get_restaurant_by_id(restaurant_id)
 
-@router.get("/{restaurant_id}/reviews", 
-            response_model=RestaurantReviews,
-            summary="Get Restaurant Reviews",
-            description="Retrieve customer reviews for a specific restaurant from Google Maps",
-            response_description="List of customer reviews with ratings and comments",
-            responses={
-                200: {
-                    "description": "Reviews retrieved successfully",
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "restaurant_id": "restaurant_123",
-                                "reviews": [
-                                    {
-                                        "id": "review_789",
-                                        "author_name": "John D.",
-                                        "rating": 5,
-                                        "text": "Amazing pizza! Best in the city.",
-                                        "time": "2024-01-01T12:00:00",
-                                        "profile_photo_url": "https://example.com/profile.jpg"
-                                    }
-                                ],
-                                "average_rating": 4.5,
-                                "total_reviews": 127
-                            }
-                        }
-                    }
-                }
-            })
-async def get_restaurant_reviews(
-    restaurant_id: str,
-    limit: Optional[int] = 10,
-    current_user: UserResponse = Depends(get_current_user)
-):
-    """
-    Retrieve customer reviews for a specific restaurant.
-    
-    Gets reviews from Google Maps including ratings, comments, and reviewer information.
-    
-    Args:
-        restaurant_id (str): Unique identifier for the restaurant
-        limit (int, optional): Maximum number of reviews to return. Defaults to 10.
-        current_user: Injected current user from JWT token
-        
-    Returns:
-        RestaurantReviews: List of reviews with average rating and total count
-    """
-    from .google_maps.gmaps_api import get_restaurant_reviews as gmaps_reviews
-    return await gmaps_reviews(restaurant_id, limit)
+    if not restaurant_data:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
 
-@router.get("/{restaurant_id}/top_items", 
-            response_model=BeliRestaurantTopItems,
-            summary="Get Restaurant Top Items",
-            description="Retrieve the most recommended items for a restaurant from Beli community data",
-            response_description="List of top recommended menu items with recommendation counts",
-            responses={
-                200: {
-                    "description": "Top items retrieved successfully",
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "restaurant_id": "restaurant_123",
-                                "restaurant_name": "Tony's Pizza",
-                                "top_items": [
-                                    {
-                                        "name": "Margherita Pizza",
-                                        "photo_url": "https://example.com/pizza.jpg",
-                                        "recommendation_count": 45
-                                    },
-                                    {
-                                        "name": "Caesar Salad",
-                                        "photo_url": "https://example.com/salad.jpg",
-                                        "recommendation_count": 32
-                                    }
-                                ]
-                            }
-                        }
-                    }
-                }
-            })
-async def get_restaurant_top_items(
-    restaurant_id: str,
-    limit: Optional[int] = 10,
-    current_user: UserResponse = Depends(get_current_user)
-):
-    """
-    Retrieve the most recommended items for a restaurant.
-    
-    Gets community-recommended items from Beli, showing which dishes
-    are most popular and highly rated by other users.
-    
-    Args:
-        restaurant_id (str): Unique identifier for the restaurant
-        limit (int, optional): Maximum number of top items to return. Defaults to 10.
-        current_user: Injected current user from JWT token
-        
-    Returns:
-        BeliRestaurantTopItems: List of top recommended items with counts
-    """
-    from .beli.beli_api import get_restaurant_top_items
-    return await get_restaurant_top_items(restaurant_id, limit, current_user)
+    return restaurant_data

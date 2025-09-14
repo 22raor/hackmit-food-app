@@ -281,7 +281,7 @@ export interface paths {
         };
         /**
          * Get Restaurant List
-         * @description Get a list of restaurants (mock data for testing)
+         * @description Get a list of restaurants from in-memory cache
          */
         get: operations["get_restaurants_restaurants__get"];
         put?: never;
@@ -304,50 +304,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Restaurant Menu
-         * @description Retrieve the complete menu for a specific restaurant
+         * Get Restaurant Data
+         * @description Retrieve complete restaurant data including menu items for a specific restaurant
          */
         get: operations["get_restaurant_items_restaurants__restaurant_id__items_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/restaurants/{restaurant_id}/reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Restaurant Reviews
-         * @description Retrieve customer reviews for a specific restaurant from Google Maps
-         */
-        get: operations["get_restaurant_reviews_restaurants__restaurant_id__reviews_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/restaurants/{restaurant_id}/top_items": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Restaurant Top Items
-         * @description Retrieve the most recommended items for a restaurant from Beli community data
-         */
-        get: operations["get_restaurant_top_items_restaurants__restaurant_id__top_items_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -385,11 +345,91 @@ export interface paths {
         };
         /**
          * Get Recommendation Context
-         * @description Retrieve the data context used for generating recommendations (useful for debugging and understanding AI decisions)
+         * @description Retrieve the data context used for generating recommendations (useful for debugging)
          */
         get: operations["get_recommendation_context_recs__restaurant_id__context_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vapi/item-cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get User Cart
+         * @description Get Items currently in the user cart for the session.
+         */
+        post: operations["get_user_cart_vapi_item_cart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vapi/user_cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Item To Cart
+         * @description Allow the user to add items to their cart.
+         */
+        post: operations["add_item_to_cart_vapi_user_cart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vapi/restaurant-by-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get Restaurant Info
+         * @description Get full information about restaurant - menu items, reviews, top items, other information
+         */
+        post: operations["get_restaurant_info_vapi_restaurant_by_id_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vapi/restaurants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get Restaurant List
+         * @description Fetch restaurants the user has access to order from
+         */
+        post: operations["get_restaurant_list_vapi_restaurants_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -583,6 +623,11 @@ export interface components {
             /** Mention Count */
             mention_count: number;
         };
+        /** Message */
+        Message: {
+            /** Toolcalls */
+            toolCalls: components["schemas"]["ToolCall"][];
+        };
         /** NearbyRestaurantsRequest */
         NearbyRestaurantsRequest: {
             /** Latitude */
@@ -750,6 +795,19 @@ export interface components {
             /** Last Activity */
             last_activity?: string | null;
         };
+        /** ToolCall */
+        ToolCall: {
+            /** Id */
+            id: string;
+            function: components["schemas"]["ToolCallFunction"];
+        };
+        /** ToolCallFunction */
+        ToolCallFunction: {
+            /** Name */
+            name: string;
+            /** Arguments */
+            arguments: string | Record<string, never>;
+        };
         /** UpdateTasteProfile */
         UpdateTasteProfile: {
             /** Dietary Restrictions */
@@ -845,6 +903,10 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VapiRequest */
+        VapiRequest: {
+            message: components["schemas"]["Message"];
         };
     };
     responses: never;
@@ -1018,7 +1080,7 @@ export interface operations {
                      *       "profile": {
                      *         "user_id": "uuid-string",
                      *         "dietary_restrictions": [
-                     *           "vegetarian",
+                     *           "pescetarian",
                      *           "gluten-free"
                      *         ],
                      *         "cuisine_preferences": [
@@ -1487,7 +1549,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NearbyRestaurantsResponse"];
+                    "application/json": unknown;
                 };
             };
         };
@@ -1555,26 +1617,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Menu retrieved successfully */
+            /** @description Restaurant data retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     /** @example {
-                     *       "restaurant_id": "restaurant_123",
-                     *       "restaurant_name": "Tony's Pizza",
-                     *       "items": [
-                     *         {
-                     *           "id": "item_456",
-                     *           "name": "Margherita Pizza",
-                     *           "description": "Fresh mozzarella, tomato sauce, basil",
-                     *           "price": 18.99,
-                     *           "image_url": "https://example.com/pizza.jpg"
-                     *         }
-                     *       ]
+                     *       "id": "58134",
+                     *       "name": "Giggling Rice Thai",
+                     *       "average_rating": 4.7,
+                     *       "menu_items": [],
+                     *       "reviews": [],
+                     *       "top_items": []
                      *     } */
-                    "application/json": components["schemas"]["RestaurantMenu"];
+                    "application/json": unknown;
                 };
             };
             /** @description Restaurant not found */
@@ -1587,103 +1644,6 @@ export interface operations {
                      *       "detail": "Restaurant not found"
                      *     } */
                     "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_restaurant_reviews_restaurants__restaurant_id__reviews_get: {
-        parameters: {
-            query?: {
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                restaurant_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Reviews retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /** @example {
-                     *       "restaurant_id": "restaurant_123",
-                     *       "reviews": [
-                     *         {
-                     *           "id": "review_789",
-                     *           "author_name": "John D.",
-                     *           "rating": 5,
-                     *           "text": "Amazing pizza! Best in the city.",
-                     *           "time": "2024-01-01T12:00:00",
-                     *           "profile_photo_url": "https://example.com/profile.jpg"
-                     *         }
-                     *       ],
-                     *       "average_rating": 4.5,
-                     *       "total_reviews": 127
-                     *     } */
-                    "application/json": components["schemas"]["RestaurantReviews"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_restaurant_top_items_restaurants__restaurant_id__top_items_get: {
-        parameters: {
-            query?: {
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                restaurant_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Top items retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /** @example {
-                     *       "restaurant_id": "restaurant_123",
-                     *       "restaurant_name": "Tony's Pizza",
-                     *       "top_items": [
-                     *         {
-                     *           "name": "Margherita Pizza",
-                     *           "photo_url": "https://example.com/pizza.jpg",
-                     *           "recommendation_count": 45
-                     *         },
-                     *         {
-                     *           "name": "Caesar Salad",
-                     *           "photo_url": "https://example.com/salad.jpg",
-                     *           "recommendation_count": 32
-                     *         }
-                     *       ]
-                     *     } */
-                    "application/json": components["schemas"]["BeliRestaurantTopItems"];
                 };
             };
             /** @description Validation Error */
@@ -1712,43 +1672,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Recommendation generated successfully */
+            /** @description AI-generated food recommendation with reasoning and confidence score */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /** @example {
-                     *       "item": {
-                     *         "id": "rec_1",
-                     *         "name": "Spicy Tuna Roll",
-                     *         "description": "Fresh tuna with spicy mayo and cucumber",
-                     *         "price": 13.99,
-                     *         "category": "Sushi Rolls",
-                     *         "ingredients": [
-                     *           "tuna",
-                     *           "spicy mayo",
-                     *           "cucumber",
-                     *           "nori"
-                     *         ],
-                     *         "allergens": [
-                     *           "fish"
-                     *         ],
-                     *         "calories": 290,
-                     *         "reviews": [
-                     *           {
-                     *             "author": "foodie_mike",
-                     *             "rating": 5,
-                     *             "text": "Absolutely delicious! Highly recommend.",
-                     *             "date": "2024-01-15"
-                     *           }
-                     *         ],
-                     *         "reasoning": "Based on your preference for umami flavors and seafood, this spicy tuna roll offers the perfect balance of heat and freshness."
-                     *       },
-                     *       "confidence_score": 0.85,
-                     *       "session_id": "uuid-string",
-                     *       "alternatives": []
-                     *     } */
                     "application/json": components["schemas"]["RecommendationResponse"];
                 };
             };
@@ -1759,18 +1688,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Recommendation generation failed */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /** @example {
-                     *       "detail": "Failed to generate recommendation: AI service unavailable"
-                     *     } */
-                    "application/json": unknown;
                 };
             };
         };
@@ -1786,31 +1703,144 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Context retrieved successfully */
+            /** @description Summary of user profile, restaurant data, and community insights */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /** @example {
-                     *       "user_profile_summary": {
-                     *         "dietary_restrictions": [],
-                     *         "cuisine_preferences": [
-                     *           {
-                     *             "cuisine_type": "Japanese",
-                     *             "preference_level": 5
-                     *           }
-                     *         ],
-                     *         "flavor_profile": {
-                     *           "spicy_tolerance": 4,
-                     *           "umami_preference": 5,
-                     *           "sweet_preference": 3
-                     *         }
-                     *       },
-                     *       "available_items_count": 25,
-                     *       "reviews_count": 127,
-                     *       "community_favorites_count": 8
-                     *     } */
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_cart_vapi_item_cart_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VapiRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_item_to_cart_vapi_user_cart_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VapiRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_restaurant_info_vapi_restaurant_by_id_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VapiRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_restaurant_list_vapi_restaurants_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VapiRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": unknown;
                 };
             };

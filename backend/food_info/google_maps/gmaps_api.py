@@ -21,7 +21,7 @@ MOCK_REVIEWS = {
                 rating=5,
                 relative_time_description="2 weeks ago",
                 text="Amazing sushi! The Dragon Roll was absolutely delicious. Fresh ingredients and great presentation.",
-                time=datetime.utcnow()
+                time=datetime.utcnow(),
             ),
             Review(
                 id="review_2",
@@ -30,10 +30,10 @@ MOCK_REVIEWS = {
                 rating=4,
                 relative_time_description="1 month ago",
                 text="Good quality sushi, though a bit pricey. The miso soup was excellent.",
-                time=datetime.utcnow()
-            )
+                time=datetime.utcnow(),
+            ),
         ],
-        last_updated=datetime.utcnow()
+        last_updated=datetime.utcnow(),
     ),
     "rest_2": RestaurantReviews(
         restaurant_id="rest_2",
@@ -49,7 +49,7 @@ MOCK_REVIEWS = {
                 rating=5,
                 relative_time_description="1 week ago",
                 text="Best pizza in the area! The Margherita is perfect - crispy crust and fresh ingredients.",
-                time=datetime.utcnow()
+                time=datetime.utcnow(),
             ),
             Review(
                 id="review_4",
@@ -58,11 +58,11 @@ MOCK_REVIEWS = {
                 rating=3,
                 relative_time_description="3 weeks ago",
                 text="Decent pizza but service was slow. The Caesar salad was good though.",
-                time=datetime.utcnow()
-            )
+                time=datetime.utcnow(),
+            ),
         ],
-        last_updated=datetime.utcnow()
-    )
+        last_updated=datetime.utcnow(),
+    ),
 }
 
 MOCK_ITEM_REVIEWS = {
@@ -77,11 +77,11 @@ MOCK_ITEM_REVIEWS = {
                 rating=5,
                 relative_time_description="2 weeks ago",
                 text="The Dragon Roll was absolutely delicious. Fresh ingredients and great presentation.",
-                time=datetime.utcnow()
+                time=datetime.utcnow(),
             )
         ],
         average_rating=4.8,
-        mention_count=15
+        mention_count=15,
     ),
     "Margherita Pizza": MenuItemReviews(
         item_name="Margherita Pizza",
@@ -94,13 +94,14 @@ MOCK_ITEM_REVIEWS = {
                 rating=5,
                 relative_time_description="1 week ago",
                 text="The Margherita is perfect - crispy crust and fresh ingredients.",
-                time=datetime.utcnow()
+                time=datetime.utcnow(),
             )
         ],
         average_rating=4.6,
-        mention_count=23
-    )
+        mention_count=23,
+    ),
 }
+
 
 @router.get("/restaurant/{restaurant_id}/reviews", response_model=RestaurantReviews)
 async def get_restaurant_reviews(restaurant_id: str, limit: Optional[int] = 10):
@@ -110,7 +111,7 @@ async def get_restaurant_reviews(restaurant_id: str, limit: Optional[int] = 10):
     if not reviews:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Reviews not found for restaurant {restaurant_id}"
+            detail=f"Reviews not found for restaurant {restaurant_id}",
         )
 
     # Apply limit to reviews
@@ -120,7 +121,11 @@ async def get_restaurant_reviews(restaurant_id: str, limit: Optional[int] = 10):
 
     return reviews
 
-@router.get("/restaurant/{restaurant_id}/item/{item_name}/reviews", response_model=MenuItemReviews)
+
+@router.get(
+    "/restaurant/{restaurant_id}/item/{item_name}/reviews",
+    response_model=MenuItemReviews,
+)
 async def get_menu_item_reviews(restaurant_id: str, item_name: str):
     """Get reviews mentioning a specific menu item"""
     # Mock implementation - replace with actual Google Maps API call and text analysis
@@ -132,10 +137,11 @@ async def get_menu_item_reviews(restaurant_id: str, item_name: str):
             restaurant_id=restaurant_id,
             reviews=[],
             average_rating=None,
-            mention_count=0
+            mention_count=0,
         )
 
     return item_reviews
+
 
 @router.get("/restaurant/{restaurant_id}/place_details", response_model=PlaceDetails)
 async def get_place_details(restaurant_id: str):
@@ -158,9 +164,9 @@ async def get_place_details(restaurant_id: str):
                 "Thursday: 11:00 AM – 10:00 PM",
                 "Friday: 11:00 AM – 11:00 PM",
                 "Saturday: 11:00 AM – 11:00 PM",
-                "Sunday: 12:00 PM – 9:00 PM"
+                "Sunday: 12:00 PM – 9:00 PM",
             ],
-            photos=["https://example.com/photo1.jpg", "https://example.com/photo2.jpg"]
+            photos=["https://example.com/photo1.jpg", "https://example.com/photo2.jpg"],
         )
     elif restaurant_id == "rest_2":
         return PlaceDetails(
@@ -179,12 +185,12 @@ async def get_place_details(restaurant_id: str):
                 "Thursday: 10:00 AM – 11:00 PM",
                 "Friday: 10:00 AM – 12:00 AM",
                 "Saturday: 10:00 AM – 12:00 AM",
-                "Sunday: 11:00 AM – 10:00 PM"
+                "Sunday: 11:00 AM – 10:00 PM",
             ],
-            photos=["https://example.com/pizza1.jpg", "https://example.com/pizza2.jpg"]
+            photos=["https://example.com/pizza1.jpg", "https://example.com/pizza2.jpg"],
         )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Place details not found for restaurant {restaurant_id}"
+            detail=f"Place details not found for restaurant {restaurant_id}",
         )

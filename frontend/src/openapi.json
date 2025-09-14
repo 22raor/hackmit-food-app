@@ -2,7 +2,7 @@
     "openapi": "3.1.0",
     "info": {
         "title": "Food Recommender API",
-        "description": "\n    ## 🍔 Food Recommender API\n    \n    A Tinder-style food recommendation app that helps users discover food items by swiping through restaurant menus with Claude Haiku 3 AI-powered personalized suggestions.\n    \n    ### Key Features:\n    - **Google OAuth Authentication**: Secure login with Google accounts\n    - **Restaurant Discovery**: Browse restaurants via DoorDash, Google Maps, and Beli integrations\n    - **Personalized Recommendations**: Claude Haiku 3 AI-powered food suggestions based on user preferences and taste profiles\n    - **User Profiles**: Manage dietary preferences, allergies, and taste profiles\n    - **Swipe Interface**: Tinder-style interface for discovering food items\n    \n    ### Authentication:\n    1. Use `/auth/google` endpoint with Google ID token to authenticate\n    2. Include the returned JWT token in the `Authorization` header as `Bearer <token>` for all authenticated requests\n    \n    ### API Structure:\n    - **Auth**: `/auth/*` - Authentication and user management\n    - **User Profile**: `/user_profile/*` - User preferences and taste profiles\n    - **Restaurants**: `/restaurants/*` - Restaurant and menu data from multiple sources\n    - **Recommendations**: `/recs/*` - AI-powered food recommendations\n    \n    ### External Integrations:\n    - **DoorDash**: Restaurant listings and menus\n    - **Google Maps**: Restaurant reviews and place details\n    - **Beli**: Community recommendations and top items\n    - **Claude Haiku 3**: Personalized recommendation engine\n    ",
+        "description": "\n    ## 🍔 Food Recommender API\n\n    A Tinder-style food recommendation app that helps users discover food items by swiping through restaurant menus with Claude Haiku 3 AI-powered personalized suggestions.\n\n    ### Key Features:\n    - **Google OAuth Authentication**: Secure login with Google accounts\n    - **Restaurant Discovery**: Browse restaurants via DoorDash, Google Maps, and Beli integrations\n    - **Personalized Recommendations**: Claude Haiku 3 AI-powered food suggestions based on user preferences and taste profiles\n    - **User Profiles**: Manage dietary preferences, allergies, and taste profiles\n    - **Swipe Interface**: Tinder-style interface for discovering food items\n\n    ### Authentication:\n    1. Use `/auth/google` endpoint with Google ID token to authenticate\n    2. Include the returned JWT token in the `Authorization` header as `Bearer <token>` for all authenticated requests\n\n    ### API Structure:\n    - **Auth**: `/auth/*` - Authentication and user management\n    - **User Profile**: `/user_profile/*` - User preferences and taste profiles\n    - **Restaurants**: `/restaurants/*` - Restaurant and menu data from multiple sources\n    - **Recommendations**: `/recs/*` - AI-powered food recommendations\n\n    ### External Integrations:\n    - **DoorDash**: Restaurant listings and menus\n    - **Google Maps**: Restaurant reviews and place details\n    - **Beli**: Community recommendations and top items\n    - **Claude Haiku 3**: Personalized recommendation engine\n    ",
         "contact": {
             "name": "Food Recommender Team",
             "email": "support@foodrecommender.com"
@@ -214,7 +214,7 @@
                                     "profile": {
                                         "user_id": "uuid-string",
                                         "dietary_restrictions": [
-                                            "vegetarian",
+                                            "pescetarian",
                                             "gluten-free"
                                         ],
                                         "cuisine_preferences": [
@@ -851,16 +851,14 @@
                     "restaurants"
                 ],
                 "summary": "Get Restaurant List",
-                "description": "Get a list of restaurants (mock data for testing)",
+                "description": "Get a list of restaurants from in-memory cache",
                 "operationId": "get_restaurants_restaurants__get",
                 "responses": {
                     "200": {
                         "description": "List of restaurants with basic information",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/NearbyRestaurantsResponse"
-                                }
+                                "schema": {}
                             }
                         }
                     }
@@ -941,8 +939,8 @@
                 "tags": [
                     "restaurants"
                 ],
-                "summary": "Get Restaurant Menu",
-                "description": "Retrieve the complete menu for a specific restaurant",
+                "summary": "Get Restaurant Data",
+                "description": "Retrieve complete restaurant data including menu items for a specific restaurant",
                 "operationId": "get_restaurant_items_restaurants__restaurant_id__items_get",
                 "security": [
                     {
@@ -962,24 +960,17 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Menu retrieved successfully",
+                        "description": "Restaurant data retrieved successfully",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/RestaurantMenu"
-                                },
+                                "schema": {},
                                 "example": {
-                                    "restaurant_id": "restaurant_123",
-                                    "restaurant_name": "Tony's Pizza",
-                                    "items": [
-                                        {
-                                            "id": "item_456",
-                                            "name": "Margherita Pizza",
-                                            "description": "Fresh mozzarella, tomato sauce, basil",
-                                            "price": 18.99,
-                                            "image_url": "https://example.com/pizza.jpg"
-                                        }
-                                    ]
+                                    "id": "58134",
+                                    "name": "Giggling Rice Thai",
+                                    "average_rating": 4.7,
+                                    "menu_items": [],
+                                    "reviews": [],
+                                    "top_items": []
                                 }
                             }
                         }
@@ -990,167 +981,6 @@
                             "application/json": {
                                 "example": {
                                     "detail": "Restaurant not found"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/restaurants/{restaurant_id}/reviews": {
-            "get": {
-                "tags": [
-                    "restaurants"
-                ],
-                "summary": "Get Restaurant Reviews",
-                "description": "Retrieve customer reviews for a specific restaurant from Google Maps",
-                "operationId": "get_restaurant_reviews_restaurants__restaurant_id__reviews_get",
-                "security": [
-                    {
-                        "HTTPBearer": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "restaurant_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "title": "Restaurant Id"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "default": 10,
-                            "title": "Limit"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Reviews retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/RestaurantReviews"
-                                },
-                                "example": {
-                                    "restaurant_id": "restaurant_123",
-                                    "reviews": [
-                                        {
-                                            "id": "review_789",
-                                            "author_name": "John D.",
-                                            "rating": 5,
-                                            "text": "Amazing pizza! Best in the city.",
-                                            "time": "2024-01-01T12:00:00",
-                                            "profile_photo_url": "https://example.com/profile.jpg"
-                                        }
-                                    ],
-                                    "average_rating": 4.5,
-                                    "total_reviews": 127
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/restaurants/{restaurant_id}/top_items": {
-            "get": {
-                "tags": [
-                    "restaurants"
-                ],
-                "summary": "Get Restaurant Top Items",
-                "description": "Retrieve the most recommended items for a restaurant from Beli community data",
-                "operationId": "get_restaurant_top_items_restaurants__restaurant_id__top_items_get",
-                "security": [
-                    {
-                        "HTTPBearer": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "restaurant_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "title": "Restaurant Id"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "default": 10,
-                            "title": "Limit"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Top items retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/BeliRestaurantTopItems"
-                                },
-                                "example": {
-                                    "restaurant_id": "restaurant_123",
-                                    "restaurant_name": "Tony's Pizza",
-                                    "top_items": [
-                                        {
-                                            "name": "Margherita Pizza",
-                                            "photo_url": "https://example.com/pizza.jpg",
-                                            "recommendation_count": 45
-                                        },
-                                        {
-                                            "name": "Caesar Salad",
-                                            "photo_url": "https://example.com/salad.jpg",
-                                            "recommendation_count": 32
-                                        }
-                                    ]
                                 }
                             }
                         }
@@ -1204,52 +1034,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Recommendation generated successfully",
+                        "description": "AI-generated food recommendation with reasoning and confidence score",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/RecommendationResponse"
-                                },
-                                "example": {
-                                    "item": {
-                                        "id": "rec_1",
-                                        "name": "Spicy Tuna Roll",
-                                        "description": "Fresh tuna with spicy mayo and cucumber",
-                                        "price": 13.99,
-                                        "category": "Sushi Rolls",
-                                        "ingredients": [
-                                            "tuna",
-                                            "spicy mayo",
-                                            "cucumber",
-                                            "nori"
-                                        ],
-                                        "allergens": [
-                                            "fish"
-                                        ],
-                                        "calories": 290,
-                                        "reviews": [
-                                            {
-                                                "author": "foodie_mike",
-                                                "rating": 5,
-                                                "text": "Absolutely delicious! Highly recommend.",
-                                                "date": "2024-01-15"
-                                            }
-                                        ],
-                                        "reasoning": "Based on your preference for umami flavors and seafood, this spicy tuna roll offers the perfect balance of heat and freshness."
-                                    },
-                                    "confidence_score": 0.85,
-                                    "session_id": "uuid-string",
-                                    "alternatives": []
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Recommendation generation failed",
-                        "content": {
-                            "application/json": {
-                                "example": {
-                                    "detail": "Failed to generate recommendation: AI service unavailable"
                                 }
                             }
                         }
@@ -1273,7 +1062,7 @@
                     "recommendations"
                 ],
                 "summary": "Get Recommendation Context",
-                "description": "Retrieve the data context used for generating recommendations (useful for debugging and understanding AI decisions)",
+                "description": "Retrieve the data context used for generating recommendations (useful for debugging)",
                 "operationId": "get_recommendation_context_recs__restaurant_id__context_get",
                 "security": [
                     {
@@ -1293,29 +1082,170 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Context retrieved successfully",
+                        "description": "Summary of user profile, restaurant data, and community insights",
                         "content": {
                             "application/json": {
-                                "schema": {},
-                                "example": {
-                                    "user_profile_summary": {
-                                        "dietary_restrictions": [],
-                                        "cuisine_preferences": [
-                                            {
-                                                "cuisine_type": "Japanese",
-                                                "preference_level": 5
-                                            }
-                                        ],
-                                        "flavor_profile": {
-                                            "spicy_tolerance": 4,
-                                            "umami_preference": 5,
-                                            "sweet_preference": 3
-                                        }
-                                    },
-                                    "available_items_count": 25,
-                                    "reviews_count": 127,
-                                    "community_favorites_count": 8
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vapi/item-cart": {
+            "post": {
+                "tags": [
+                    "vapi"
+                ],
+                "summary": "Get User Cart",
+                "description": "Get Items currently in the user cart for the session.",
+                "operationId": "get_user_cart_vapi_item_cart_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VapiRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vapi/user_cart": {
+            "post": {
+                "tags": [
+                    "vapi"
+                ],
+                "summary": "Add Item To Cart",
+                "description": "Allow the user to add items to their cart.",
+                "operationId": "add_item_to_cart_vapi_user_cart_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VapiRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vapi/restaurant-by-id": {
+            "post": {
+                "tags": [
+                    "vapi"
+                ],
+                "summary": "Get Restaurant Info",
+                "description": "Get full information about restaurant - menu items, reviews, top items, other information",
+                "operationId": "get_restaurant_info_vapi_restaurant_by_id_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VapiRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vapi/restaurants": {
+            "post": {
+                "tags": [
+                    "vapi"
+                ],
+                "summary": "Get Restaurant List",
+                "description": "Fetch restaurants the user has access to order from",
+                "operationId": "get_restaurant_list_vapi_restaurants_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VapiRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
                             }
                         }
                     },
@@ -1825,6 +1755,22 @@
                 ],
                 "title": "MenuItemReviews"
             },
+            "Message": {
+                "properties": {
+                    "toolCalls": {
+                        "items": {
+                            "$ref": "#/components/schemas/ToolCall"
+                        },
+                        "type": "array",
+                        "title": "Toolcalls"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "toolCalls"
+                ],
+                "title": "Message"
+            },
             "NearbyRestaurantsRequest": {
                 "properties": {
                     "latitude": {
@@ -2305,6 +2251,48 @@
                 ],
                 "title": "TasteProfileResponse"
             },
+            "ToolCall": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    },
+                    "function": {
+                        "$ref": "#/components/schemas/ToolCallFunction"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "function"
+                ],
+                "title": "ToolCall"
+            },
+            "ToolCallFunction": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "arguments": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "object"
+                            }
+                        ],
+                        "title": "Arguments"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "arguments"
+                ],
+                "title": "ToolCallFunction"
+            },
             "UpdateTasteProfile": {
                 "properties": {
                     "dietary_restrictions": {
@@ -2597,6 +2585,18 @@
                     "type"
                 ],
                 "title": "ValidationError"
+            },
+            "VapiRequest": {
+                "properties": {
+                    "message": {
+                        "$ref": "#/components/schemas/Message"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message"
+                ],
+                "title": "VapiRequest"
             }
         },
         "securitySchemes": {

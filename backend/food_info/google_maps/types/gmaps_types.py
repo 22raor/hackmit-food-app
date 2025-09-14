@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
+
 class Review(BaseModel):
     id: str
     author_name: str
@@ -12,6 +13,7 @@ class Review(BaseModel):
     relative_time_description: str
     text: str
     time: datetime
+
 
 class PlaceDetails(BaseModel):
     place_id: str
@@ -25,6 +27,7 @@ class PlaceDetails(BaseModel):
     opening_hours: Optional[List[str]] = None
     photos: List[str] = []
 
+
 class RestaurantReviews(BaseModel):
     restaurant_id: str
     place_id: str
@@ -33,6 +36,7 @@ class RestaurantReviews(BaseModel):
     total_reviews: int
     reviews: List[Review]
     last_updated: datetime
+
 
 class MenuItemReviews(BaseModel):
     item_name: str
