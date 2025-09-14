@@ -15,26 +15,9 @@ This app provides personalized food recommendations by:
 
 ## 🏗️ Architecture
 
-```
-backend/
-├── api_router.py              # Main FastAPI application
-├── auth/                      # Authentication & user management
-├── user_profile/              # Taste profile management
-├── food_info/                 # Restaurant & menu data aggregation
-│   ├── doordash/             # DoorDash API integration
-│   ├── google_maps/          # Google Maps reviews
-│   └── beli/                 # Community recommendations
-├── recommender/              # GPT-powered recommendation engine
-└── util/                     # Shared utilities
-    ├── chat/                 # OpenAI GPT client
-    ├── formatting/           # Prompt building
-    └── fuzzy_match.py        # String matching utilities
-```
-
 ## 🚀 API Endpoints
 
 ### Authentication (`/auth`)
-- `POST /auth/register` - Create new user account
 - `POST /auth/login` - User login with JWT token
 - `GET /auth/me` - Get current user info
 
@@ -43,13 +26,10 @@ backend/
 - `POST /user_profile/{user_id}` - Update taste preferences
 
 ### Restaurants (`/restaurants`)
-- `POST /restaurants/` - Find nearby restaurants
-- `GET /restaurants/{id}/items` - Get restaurant menu
-- `GET /restaurants/{id}/reviews` - Get Google Maps reviews
-- `GET /restaurants/{id}/top_items` - Get community favorites
+- `GET /restaurants/` - Find nearby restaurants
 
 ### Recommendations (`/recs`)
-- `POST /recs/{restaurant_id}` - Get GPT recommendation
+- `POST /recs/{restaurant_id}` - Get GPT recommendation for the next food item.
   ```json
   {
     "curr_dislikes": ["California Roll", "Miso Soup"]
@@ -59,21 +39,13 @@ backend/
 ## 🔧 Setup & Installation
 
 1. **Install dependencies**:
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   ```
+   `git clone git@github.com:22raor/hackmit-food-app.git`
 
 2. **Environment variables** (create `.env` file):
-   ```
-   OPENAI_API_KEY=your_openai_api_key_here
-   SECRET_KEY=your_jwt_secret_key_here
-   ```
+   Fill out the .env.example file.
 
 3. **Run the server**:
-   ```bash
-   python api_router.py
-   ```
+   Run `docker-compose build && docker-compose up`.
 
 4. **Access the API**:
    - API Documentation: http://localhost:8000/docs
