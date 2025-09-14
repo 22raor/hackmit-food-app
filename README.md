@@ -2,7 +2,7 @@
 
 # Food Recommender API
 
-A Tinder-style food recommendation app with GPT-powered suggestions that helps users discover their perfect meal through an intuitive swipe interface.
+A Tinder-style food recommendation app with GPT-powered suggestions that helps users discover their perfect meal through an intuitive swipe interface. We use a combination of vision LLMs, voice agents, web scraping, reverse engineering, and some APIs to work.
 
 ## 🍽️ Project Overview
 
@@ -98,20 +98,9 @@ backend/
 - Utility modules for fuzzy matching and prompt building
 
 🚧 **Next Steps**:
-- Integrate real external APIs (DoorDash, Google Maps, Beli)
-- Connect to actual database (PostgreSQL)
-- Implement real OpenAI GPT integration
-- Add comprehensive error handling
-- Build frontend React/React Native app
 - Add order placement functionality
 
 ## 🛠️ Development Notes
-
-- All external API calls are currently mocked for development
-- JWT secret key should be properly configured for production
-- CORS is currently open - restrict for production use
-- Database operations use in-memory mock data
-- OpenAI integration is stubbed but ready for API key
 
 ## 📱 Frontend Integration
 
