@@ -38,7 +38,7 @@ async def get_restaurants(current_user: UserResponse = Depends(get_current_user)
             },
             "rating": 4.5,
             "price_range": "$$",
-            "image_url": "https://example.com/sakura.jpg"
+            "image_url": "https://www.tastingtable.com/img/gallery/the-best-sushi-restaurants-in-dallas/l-intro-1695231811.jpg"
         },
         {
             "id": "rest_002", 
@@ -54,7 +54,7 @@ async def get_restaurants(current_user: UserResponse = Depends(get_current_user)
             },
             "rating": 4.2,
             "price_range": "$$$",
-            "image_url": "https://example.com/tonys.jpg"
+            "image_url": "https://grimaldispizzeria.b-cdn.net/dbcwp/wp-content/uploads/2023/11/Ankeny-Int.jpg"
         },
         {
             "id": "rest_003",
@@ -70,8 +70,7 @@ async def get_restaurants(current_user: UserResponse = Depends(get_current_user)
             },
             "rating": 4.7,
             "price_range": "$$",
-            "image_url": "https://example.com/spice.jpg"
-        }
+            "image_url": "https://www.pittsburghmagazine.com/content/uploads/2025/01/q/j/bombay-to-burgh-photo-courtesy-of-restaurant.jpeg"}
     ]
     
     return {
