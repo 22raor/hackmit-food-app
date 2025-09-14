@@ -1,6 +1,7 @@
 # Hackmit Food App
 
 **DEMO**: https://youtu.be/ulMwv87ibrg
+
 **LOOM**: https://www.loom.com/share/f2f397ec5311411093bb33981657d099?sid=c8314676-5f2a-42f1-abf5-a30c9562e6b1
 
 # Food Recommender API
