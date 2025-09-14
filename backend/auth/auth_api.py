@@ -7,6 +7,8 @@ import sys
 import os
 import jwt
 from sqlalchemy.orm import Session
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,13 +19,8 @@ from util.auth.jwt_handler import create_access_token, verify_token
 from database import get_db
 from models import User
 
-# Optional Google OAuth imports for production
-try:
-    from google.oauth2 import id_token
-    from google.auth.transport import requests
-    GOOGLE_AUTH_AVAILABLE = True
-except ImportError:
-    GOOGLE_AUTH_AVAILABLE = False
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer()
@@ -56,21 +53,10 @@ def create_user(db: Session, google_user_info: dict) -> User:
 def verify_google_token(id_token_str: str) -> dict:
     """Verify Google ID token and return user info"""
     try:
-        if GOOGLE_AUTH_AVAILABLE:
-            # Production: Real Google token verification
-            idinfo = id_token.verify_oauth2_token(id_token_str, requests.Request(), settings.GOOGLE_CLIENT_ID)
-            return idinfo
-        else:
-            # Development: Mock verification when Google libraries not available
-            # This should be replaced with actual Google token verification in production
-            mock_user_info = {
-                'sub': 'google_user_123',  # Google user ID
-                'email': 'user@example.com',
-                'given_name': 'John',
-                'family_name': 'Doe',
-                'picture': 'https://example.com/profile.jpg'
-            }
-            return mock_user_info
+        # Production: Real Google token verification
+        idinfo = id_token.verify_oauth2_token(id_token_str, requests.Request(), settings.GOOGLE_CLIENT_ID)
+        print(idinfo)
+        return idinfo
         
     except ValueError as e:
         raise HTTPException(
@@ -197,7 +183,7 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
     Raises:
         HTTPException: 401 if the Google ID token is invalid
     """
-    
+    print(f'got {auth_request}')
     if 'mock' in auth_request.id_token:
         existing_user = get_user_by_google_id(db, '101234567890123456789')
         if not existing_user:
@@ -245,13 +231,16 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
     access_token = create_access_token(
         data={"sub": user.id}, expires_delta=access_token_expires
     )
-    
-    return LoginResponse(
+
+    response =  LoginResponse(
         access_token=access_token,
         token_type="bearer",
         user=user_response,
         is_new_user=is_new_user
     )
+    
+    print(response.model_dump_json(indent=2))
+    return response
 
 @router.get("/me", 
             response_model=UserResponse,
