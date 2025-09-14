@@ -21,9 +21,7 @@ class AuthViewModel: ObservableObject {
         guard let serverURL = try? Servers.Server1.url() else {
             throw NSError(domain: "AuthError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid server URL"])
         }
-        
-        print(googleIdToken)
-        
+                
         let tempClient = Client(serverURL: serverURL, transport: URLSessionTransport())
         
         do {
