@@ -44,6 +44,23 @@ class VapiRequest(BaseModel):
 
 
 
+@router.get("/item-cart-user")
+async def get_user_cart_vapi(user_id: str):
+    """Get Items currently in the user cart for the session."""
+    if user_id not in USER_CARTS:
+        USER_CARTS[user_id] = []
+    print("USER_CARTS:", USER_CARTS)
+    user_cart = USER_CARTS[user_id]
+    USER_CARTS[user_id] = []
+    return {
+        "user_cart": {
+            "user_id": user_id,
+            "cart_items": user_cart,
+            "total_items": len(user_cart),
+        }
+    }
+
+
 @router.post("/item-cart")
 async def get_user_cart(request: VapiRequest):
     """Get Items currently in the user cart for the session."""
@@ -59,11 +76,13 @@ async def get_user_cart(request: VapiRequest):
         args = json.loads(args)
 
     user_id = args.get("user_id")
+    print("user_id:", user_id)
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid arguments")
 
     if user_id not in USER_CARTS:
         USER_CARTS[user_id] = []
+    print("USER_CARTS:", USER_CARTS)
 
     return {
         "results": [
@@ -93,34 +112,32 @@ async def add_item_to_cart(request: VapiRequest):
     if isinstance(args, str):
         args = json.loads(args)
     user_id = args.get("user_id")
-    item_id = args.get("item_id")
-    if not user_id or not item_id:
-        raise HTTPException(status_code=400, detail="Invalid arguments")
+    item_id = int(args.get("item_id", 0))
+    restaurant_id = args.get("restaurant_id")
+    print(f"uid: {user_id}, iid: {item_id}, rid: {restaurant_id}")
+
+    if not user_id or not item_id or not restaurant_id:
+        raise HTTPException(status_code=400, detail="Missing required arguments: user_id, item_id, restaurant_id")
 
     if user_id not in USER_CARTS:
         USER_CARTS[user_id] = []
 
-    # Find the item across all restaurants to get item details
-    item_details = None
-    restaurant_name = None
+    # Get the specific restaurant data
+    restaurant_data = get_restaurant_by_id(restaurant_id)
+    if not restaurant_data:
+        raise HTTPException(status_code=404, detail=f"Restaurant with ID {restaurant_id} not found")
 
-    for restaurant_data in [
-        get_restaurant_by_id(r["id"])
-        for r in RESTAURANTS_LIST_CACHE
-        if get_restaurant_by_id(r["id"])
-    ]:
-        if restaurant_data and "menu_items" in restaurant_data:
-            for item in restaurant_data["menu_items"]:
-                if item.get("id") == item_id:
-                    item_details = item
-                    restaurant_name = restaurant_data.get("name")
-                    break
-        if item_details:
-            break
+    # Find the item in the specific restaurant
+    item_details = None
+    if "menu_items" in restaurant_data:
+        for item in restaurant_data["menu_items"]:
+            if item.get("item_id") == item_id:
+                item_details = item
+                break
 
     if not item_details:
         raise HTTPException(
-            status_code=404, detail=f"Menu item with ID {item_id} not found"
+            status_code=404, detail=f"Menu item with ID {item_id} not found in restaurant {restaurant_data.get('name', restaurant_id)}"
         )
 
     # Add item to cart with restaurant context
@@ -129,7 +146,7 @@ async def add_item_to_cart(request: VapiRequest):
         "name": item_details.get("name"),
         "price": item_details.get("price"),
         "description": item_details.get("description"),
-        "restaurant_name": restaurant_name,
+        "restaurant_name": restaurant_data.get("name"),
         "quantity": 1,
     }
 

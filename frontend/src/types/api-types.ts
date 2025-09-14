@@ -711,7 +711,7 @@ export interface components {
              * @default []
              */
             cuisine_tags: string[];
-            location: components["schemas"]["RestaurantLocation"];
+            address: string;
             /** Rating */
             rating?: number | null;
             /** Price Range */

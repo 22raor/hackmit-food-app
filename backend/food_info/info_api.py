@@ -49,8 +49,8 @@ def load_all_restaurants_on_startup():
 
                 if restaurant_id:
                     # Store full data in cache
+                    data["menu_items"] = [{**itm,"item_id": i} for i,itm in enumerate(data.get("menu_items", []))]
                     restaurants_dict[restaurant_id] = data
-
                     # Create summary for list endpoint
                     restaurant_summary = {
                         "id": data.get("id"),
@@ -77,7 +77,6 @@ def load_all_restaurants_on_startup():
     RESTAURANTS_CACHE = restaurants_dict
     RESTAURANTS_LIST_CACHE = restaurants_list
     print(f"Loaded {len(restaurants_dict), len(restaurants_list)} restaurants into memory")
-    print(restaurants_dict.keys())
 
 
 # Load restaurants on module import

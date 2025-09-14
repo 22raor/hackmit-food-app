@@ -55,9 +55,9 @@ const VapiWidget: React.FC<VapiWidgetProps> = ({
       setIsConnected(false);
       setIsSpeaking(false);
       setCallStatus('ended');
-      // Generate a user_id for cart retrieval (you can make this more sophisticated)
-      const sessionUserId = userId || `session_${Date.now()}`;
-      fetchUserCart(sessionUserId);
+      // Use the authenticated user ID if available, otherwise generate a session ID
+      const finalUserId = userId || `session_${Date.now()}`;
+      fetchUserCart(finalUserId);
     });
 
     vapiInstance.on('speech-start', () => {
@@ -75,9 +75,9 @@ const VapiWidget: React.FC<VapiWidgetProps> = ({
       // Handle call end and extract user_id if provided
       if (message.type === 'function-call' && message.functionCall?.name === 'endCall') {
         const args = message.functionCall.parameters;
-        if (args?.user_id) {
-          fetchUserCart(args.user_id);
-        }
+        // Prefer the authenticated user ID, then the message user_id, then fallback
+        const finalUserId = userId || args?.user_id || `session_${Date.now()}`;
+        fetchUserCart(finalUserId);
       }
     });
 
@@ -95,28 +95,17 @@ const VapiWidget: React.FC<VapiWidgetProps> = ({
 
   const fetchUserCart = async (userId: string) => {
     try {
-      const response = await fetch('/api/item-cart', {
-        method: 'POST',
+      const response = await fetch(`/api/item-cart?user_id=${userId}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message: {
-            toolCalls: [{
-              id: 'cart-fetch-' + Date.now(),
-              function: {
-                name: 'getUserCart',
-                arguments: { user_id: userId }
-              }
-            }]
-          }
-        }),
       });
 
       if (response.ok) {
         const data = await response.json();
         console.log('Cart data:', data);
-        setCartData(data.results?.[0]?.result);
+        setCartData(data.user_cart);
         setShowCart(true);
       }
     } catch (error) {
@@ -179,7 +168,7 @@ Restaurant selection: Once the user picks a restaurant, recommend 1–2 top item
 
 Building the meal: Add items to cart as they confirm, and guide them toward a complete meal (main, side, drink, or dessert if they want). Make sure to capture the user_id when adding items to cart.
 
-Finishing up: Once they're satisfied, confirm the order clearly and finalize. Before ending the call, make sure you have a user_id (create one if needed like "session_" + timestamp) and end the call with that user_id so the frontend can fetch their cart.
+Finishing up: Once they're satisfied, confirm the order clearly and finalize. Before ending the call, make sure you have a user_id ${userId ? `(use "${userId}")` : '(create one if needed like "session_" + timestamp)'} and end the call with that user_id so the frontend can fetch their cart.
 
 Style rules:
 - LEAD WITH RESTAURANT RECOMMENDATIONS based on their profile - don't ask what they want first
@@ -235,7 +224,7 @@ Style rules:
               model: "nova-2" as const,
               language: "en" as const
             },
-            firstMessageMode: "assistant-speaks-first-with-model-generated-message"
+            firstMessageMode: "assistant-speaks-first-with-model-generated-message" as const
           };
 
           await vapi.start(personalizedConfig);

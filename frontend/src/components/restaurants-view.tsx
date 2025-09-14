@@ -176,7 +176,7 @@ export function RestaurantsView({ user }: RestaurantsViewProps) {
                     </div>
 
                     <p className="text-[#555555] text-[12px] mb-2">
-                      {restaurant.category || 'American'} • $15-25
+                      {restaurant.cuisine_tags?.[0] || 'American'} • {restaurant.price_range || '$15-25'}
                     </p>
 
                     <p className="text-[#555555] text-[11px] mb-3">
