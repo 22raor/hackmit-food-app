@@ -137,10 +137,10 @@ async def get_doordash_html(url: str) -> str:
     #     # "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/108.0"
     # ]
     user_agents = [
-        # "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
         # "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
         # "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
-        # "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
         # "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15",
         # "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.76",
         # "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/108.0",
@@ -156,7 +156,7 @@ async def get_doordash_html(url: str) -> str:
             context = await browser.new_context(user_agent=random_user_agent)
             page = await context.new_page()
 
-            await page.goto(url, wait_until='networkidle', timeout=60000)
+            await page.goto(url, wait_until='networkidle', timeout=120000)
             
             content = await page.content()
 
@@ -175,7 +175,7 @@ async def process_doordash_url(url, mock = False):
         with open('out.txt', 'r') as file:
             html_content = file.read()
     else:
-        delay = random.uniform(1, 3)
+        delay = random.uniform(5, 8)
         print(f"waiting for {delay} seconds...")
         await asyncio.sleep(delay)
         html_content = await get_doordash_html(url)

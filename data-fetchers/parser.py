@@ -19,8 +19,10 @@ async def get_some_restaurants(cap = 10):
 
     beli = Beli(email=USER_EMAIL, password=USER_PASSWORD, user_id=USER_ID)
 
-    rests = (await get_nearby_restaurants())[:cap]
-    print('found ' + str(len(rests)) + ' restaurants')
+    # rests = (await get_nearby_restaurants())[:cap]
+    # print('found ' + str(len(rests)) + ' restaurants')
+
+    rests = ['https://www.doordash.com/store/hei-la-moon-restaurant-boston-45774', 'https://www.doordash.com/store/la-perle-caribbean-restaurant-everett-2804730', 'https://www.doordash.com/store/pai-kin-kao-thai-restaurant-cambridge-31557551']
     for restaurant_url in rests:
         print("processing " + restaurant_url)
         success, data = await process_doordash_url(restaurant_url)
@@ -49,4 +51,4 @@ async def get_some_restaurants(cap = 10):
             # print(data)
 
 if __name__ == '__main__':
-    asyncio.run(get_some_restaurants())
+    asyncio.run(get_some_restaurants(cap=30))
