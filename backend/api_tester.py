@@ -19,6 +19,7 @@ import httpx
 import json
 import argparse
 import sys
+import random
 from typing import Optional
 
 class APITester:
@@ -103,7 +104,7 @@ class APITester:
 
         profile_data = {
             "dietary_restrictions": [
-                {"name": "vegetarian", "severity": "preference"}
+                {"name": "pescetarian", "severity": "preference"}
             ],
             "cuisine_preferences": [
                 {"cuisine_type": "Japanese", "preference_level": 5},
@@ -193,8 +194,9 @@ class APITester:
                     restaurants = data if isinstance(data, list) else data.get('restaurants', [])
 
                     if restaurants:
-                        restaurant_id = restaurants[0].get('id')
-                        restaurant_name = restaurants[0].get('name', 'Unknown')
+                        r_index = random.randint(0, len(restaurants)-1)
+                        restaurant_id = restaurants[r_index].get('id')
+                        restaurant_name = restaurants[r_index].get('name', 'Unknown')
                         print(f"✅ Restaurant list retrieved successfully!")
                         print(f"   Found {len(restaurants)} restaurants")
                         print(f"   Using restaurant: {restaurant_name} (ID: {restaurant_id})")
@@ -229,11 +231,12 @@ class APITester:
                 if response.status_code == 200:
                     data = response.json()
                     item = data.get('item', {})
+                    print(data)
                     print("✅ AI recommendation successful!")
                     print(f"   Recommended item: {item.get('name', 'Unknown')}")
                     print(f"   Description: {item.get('description', 'N/A')}")
                     print(f"   Price: ${item.get('price', 'N/A')}")
-                    print(f"   Reasoning: {item.get('reasoning', 'N/A')[:100]}...")
+                    print(f"   Reasoning: {item.get('reasoning', 'N/A')}...")
                     return True
                 else:
                     print(f"❌ Recommendation failed: {response.status_code}")

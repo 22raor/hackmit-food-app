@@ -10,7 +10,7 @@ router = APIRouter(prefix="/user_profile", tags=["user_profile"])
 # Mock database for user profiles - replace with actual database later
 MOCK_PROFILES_DB: Dict[str, UserTasteProfile] = {}
 
-@router.get("/{user_id}", 
+@router.get("/{user_id}",
            response_model=TasteProfileResponse,
            summary="Get User Taste Profile",
            description="Retrieve a user's complete taste profile including preferences and food history",
@@ -23,7 +23,7 @@ MOCK_PROFILES_DB: Dict[str, UserTasteProfile] = {}
                            "example": {
                                "profile": {
                                    "user_id": "uuid-string",
-                                   "dietary_restrictions": ["vegetarian", "gluten-free"],
+                                   "dietary_restrictions": ["pescetarian", "gluten-free"],
                                    "cuisine_preferences": ["italian", "mexican", "thai"],
                                    "flavor_profile": "spicy",
                                    "liked_foods": ["pasta", "tacos", "pad thai"],
@@ -54,17 +54,17 @@ async def get_user_profile(
 ):
     """
     Retrieve a user's complete taste profile.
-    
+
     Returns the user's dietary restrictions, cuisine preferences, liked/disliked foods,
     favorite restaurants, and other preference data. Users can only access their own profiles.
-    
+
     Args:
         user_id (str): The ID of the user whose profile to retrieve
         current_user: Injected current user from JWT token
-        
+
     Returns:
         TasteProfileResponse: Complete taste profile with activity statistics
-        
+
     Raises:
         HTTPException: 403 if user tries to access another user's profile
     """
@@ -74,12 +74,12 @@ async def get_user_profile(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this profile"
         )
-    
+
     profile = MOCK_PROFILES_DB.get(user_id)
     print(f"DEBUG: GET - Looking for profile for user {user_id}")
     print(f"DEBUG: GET - MOCK_PROFILES_DB keys: {list(MOCK_PROFILES_DB.keys())}")
     print(f"DEBUG: GET - Found profile: {profile is not None}")
-    
+
     if not profile:
         # Create default profile if none exists
         profile = UserTasteProfile(
@@ -98,14 +98,14 @@ async def get_user_profile(
         print(f"DEBUG: GET - Created new default profile for {user_id}")
     else:
         print(f"DEBUG: GET - Retrieved existing profile: {profile.dict()}")
-    
+
     return TasteProfileResponse(
         profile=profile,
         recommendations_count=len(profile.liked_foods) + len(profile.disliked_foods),
         last_activity=profile.updated_at
     )
 
-@router.post("/{user_id}", 
+@router.post("/{user_id}",
             response_model=TasteProfileResponse,
             summary="Update User Taste Profile",
             description="Update a user's taste profile with new preferences and food history",
@@ -150,18 +150,18 @@ async def update_user_profile(
 ):
     """
     Update a user's taste profile with new preferences.
-    
+
     Allows partial updates - only provided fields will be updated.
     Users can only update their own profiles.
-    
+
     Args:
         user_id (str): The ID of the user whose profile to update
         profile_update (UpdateTasteProfile): Profile fields to update
         current_user: Injected current user from JWT token
-        
+
     Returns:
         TasteProfileResponse: Updated taste profile with activity statistics
-        
+
     Raises:
         HTTPException: 403 if user tries to update another user's profile
     """
@@ -171,7 +171,7 @@ async def update_user_profile(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update this profile"
         )
-    
+
     # Get existing profile or create new one
     existing_profile = MOCK_PROFILES_DB.get(user_id)
     if not existing_profile:
@@ -187,22 +187,22 @@ async def update_user_profile(
             meal_time_preferences={},
             updated_at=datetime.utcnow()
         )
-    
+
     # Update fields that are provided
     update_data = profile_update.dict(exclude_unset=True)
     print(f"DEBUG: Updating profile for user {user_id} with data: {update_data}")
-    
+
     for field, value in update_data.items():
         if value is not None:
             print(f"DEBUG: Setting {field} to {value}")
             setattr(existing_profile, field, value)
-    
+
     existing_profile.updated_at = datetime.utcnow()
     MOCK_PROFILES_DB[user_id] = existing_profile
-    
+
     print(f"DEBUG: Profile after update: {existing_profile.dict()}")
     print(f"DEBUG: MOCK_PROFILES_DB keys: {list(MOCK_PROFILES_DB.keys())}")
-    
+
     return TasteProfileResponse(
         profile=existing_profile,
         recommendations_count=len(existing_profile.liked_foods) + len(existing_profile.disliked_foods),
@@ -245,17 +245,17 @@ async def delete_user_profile(
 ):
     """
     Permanently delete a user's taste profile.
-    
+
     This action cannot be undone. All taste preferences, food history,
     and recommendation data will be permanently removed.
-    
+
     Args:
         user_id (str): The ID of the user whose profile to delete
         current_user: Injected current user from JWT token
-        
+
     Returns:
         dict: Confirmation message
-        
+
     Raises:
         HTTPException: 403 if user tries to delete another user's profile
         HTTPException: 404 if profile doesn't exist
@@ -266,7 +266,7 @@ async def delete_user_profile(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this profile"
         )
-    
+
     if user_id in MOCK_PROFILES_DB:
         del MOCK_PROFILES_DB[user_id]
         return {"message": "Profile deleted successfully"}
