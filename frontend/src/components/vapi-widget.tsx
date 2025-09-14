@@ -196,7 +196,7 @@ Style rules:
             name: "Restaurant Picker",
             model: {
               provider: "openai" as const,
-              model: "gpt-4.1-nano" as const,
+              model: "gpt-4.1" as const,
               maxTokens: 5000,
               toolIds: [
                 "fa2e0a34-2513-4a91-b17d-35ae3995c40e",
