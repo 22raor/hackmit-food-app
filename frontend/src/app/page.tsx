@@ -2,15 +2,17 @@
 
 import { useSession } from "next-auth/react"
 import { useUser } from "@/hooks/useUser"
+import { useUserProfile } from "@/hooks/useUserProfile"
 import { AuthFailurePage } from "@/components/auth-failure-page"
 import { LandingPage } from "@/components/landing-page"
 import { TasteProfileSetup } from "@/components/taste-profile-setup"
 
 export default function Home() {
   const { data: session } = useSession()
-  const { user, loading, error, isAuthenticated } = useUser()
+  const { user, loading: userLoading, error, isAuthenticated } = useUser()
+  const { hasProfile, loading: profileLoading } = useUserProfile(user?.id)
 
-  if (loading) {
+  if (userLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -25,13 +27,14 @@ export default function Home() {
     return <AuthFailurePage />
   }
 
-  // Check if user is new and needs to set up taste profile
-  if (session?.is_new_user && user?.id) {
+  // Check if user needs to set up taste profile by checking if they have one
+  // This fixes the endless loop bug for first-time users
+  if (user?.id && hasProfile === false) {
     return (
       <TasteProfileSetup
         userId={user.id}
         onComplete={() => {
-          // Force a page reload to refresh the session and user data
+          // Force a page reload to refresh the user profile data
           window.location.reload()
         }}
       />

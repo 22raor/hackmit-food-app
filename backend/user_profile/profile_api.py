@@ -93,21 +93,11 @@ async def get_user_profile(
     print(f"DEBUG: GET - Found profile: {profile is not None}")
 
     if not profile:
-        # Create default profile if none exists
-        profile = UserTasteProfile(
-            user_id=user_id,
-            dietary_restrictions=[],
-            cuisine_preferences=[],
-            flavor_profile=None,
-            liked_foods=[],
-            disliked_foods=[],
-            favorite_restaurants=[],
-            price_range_preference=None,
-            meal_time_preferences={},
-            updated_at=datetime.utcnow(),
+        # Return 404 if no profile exists (user needs onboarding)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User profile not found. User needs to complete onboarding."
         )
-        MOCK_PROFILES_DB[user_id] = profile
-        print(f"DEBUG: GET - Created new default profile for {user_id}")
     else:
         print(f"DEBUG: GET - Retrieved existing profile: {profile.dict()}")
 
@@ -190,6 +180,7 @@ async def update_user_profile(
     # Get existing profile or create new one
     existing_profile = MOCK_PROFILES_DB.get(user_id)
     if not existing_profile:
+        # Create new profile when user completes onboarding
         existing_profile = UserTasteProfile(
             user_id=user_id,
             dietary_restrictions=[],
@@ -202,6 +193,7 @@ async def update_user_profile(
             meal_time_preferences={},
             updated_at=datetime.utcnow(),
         )
+        print(f"DEBUG: POST - Created new profile for onboarding user {user_id}")
 
     # Update fields that are provided
     update_data = profile_update.dict(exclude_unset=True)
