@@ -1,6 +1,6 @@
 "use client"
 
-import { signIn } from "next-auth/react"
+import { signIn, signOut } from "next-auth/react"
 import { useUser } from "@/hooks/useUser"
 
 export default function Home() {
@@ -52,22 +52,18 @@ export default function Home() {
             <div className="space-y-2 text-left">
               <p><strong>ID:</strong> {user.id}</p>
               <p><strong>Email:</strong> {user.email}</p>
-              {user.name && <p><strong>Name:</strong> {user.name}</p>}
-              {user.image && (
-                <div>
-                  <p><strong>Profile Image:</strong></p>
-                  <img
-                    src={user.image}
-                    alt="Profile"
-                    className="w-16 h-16 rounded-full mt-2"
-                  />
-                </div>
-              )}
             </div>
           </div>
         ) : (
           <p>Loading user information...</p>
         )}
+
+        <button
+          onClick={() => signOut()}
+          className="mt-6 rounded-full border border-solid border-white border-opacity-30 transition-colors flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-medium text-lg h-12 px-8"
+        >
+          Sign Out
+        </button>
       </div>
     </div>
   )
