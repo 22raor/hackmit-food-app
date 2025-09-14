@@ -15,6 +15,78 @@ router.include_router(doordash_router)
 router.include_router(gmaps_router)
 router.include_router(beli_router)
 
+@router.get("/", 
+           response_model=NearbyRestaurantsResponse,
+           summary="Get Restaurant List",
+           description="Get a list of restaurants (mock data for testing)",
+           response_description="List of restaurants with basic information")
+async def get_restaurants(current_user: UserResponse = Depends(get_current_user)):
+    """Get a list of restaurants for testing purposes"""
+    # Mock restaurant data for testing
+    mock_restaurants = [
+        {
+            "id": "rest_001",
+            "name": "Sakura Sushi",
+            "cuisine_tags": ["Japanese", "Sushi"],
+            "location": {
+                "latitude": 42.3601,
+                "longitude": -71.0589,
+                "address": "123 Main St",
+                "city": "Boston",
+                "state": "MA",
+                "zip_code": "02101"
+            },
+            "rating": 4.5,
+            "price_range": "$$",
+            "image_url": "https://example.com/sakura.jpg"
+        },
+        {
+            "id": "rest_002", 
+            "name": "Tony's Italian Kitchen",
+            "cuisine_tags": ["Italian", "Pizza"],
+            "location": {
+                "latitude": 42.3611,
+                "longitude": -71.0579,
+                "address": "456 Oak Ave",
+                "city": "Boston",
+                "state": "MA",
+                "zip_code": "02102"
+            },
+            "rating": 4.2,
+            "price_range": "$$$",
+            "image_url": "https://example.com/tonys.jpg"
+        },
+        {
+            "id": "rest_003",
+            "name": "Spice Route",
+            "cuisine_tags": ["Indian", "Curry"],
+            "location": {
+                "latitude": 42.3591,
+                "longitude": -71.0599,
+                "address": "789 Elm St",
+                "city": "Boston",
+                "state": "MA",
+                "zip_code": "02103"
+            },
+            "rating": 4.7,
+            "price_range": "$$",
+            "image_url": "https://example.com/spice.jpg"
+        }
+    ]
+    
+    return {
+        "restaurants": mock_restaurants,
+        "total_count": len(mock_restaurants),
+        "search_location": {
+            "latitude": 42.3601,
+            "longitude": -71.0589,
+            "address": "Boston, MA",
+            "city": "Boston",
+            "state": "MA",
+            "zip_code": "02101"
+        }
+    }
+
 @router.post("/", 
              response_model=NearbyRestaurantsResponse,
              summary="Get Nearby Restaurants",

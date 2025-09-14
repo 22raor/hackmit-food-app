@@ -1,16 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from .types.recs_types import (
-    RecommendationRequest, 
-    RecommendationResponse, 
-    FoodItemRecommendation,
-    RecommendationContext,
-    GPTPromptData
-)
+from .types.recs_types import RecommendationRequest, RecommendationResponse, FoodItemRecommendation, RecommendationContext
 from auth.auth_api import get_current_user
 from auth.types.auth_types import UserResponse
-from datetime import datetime
-from typing import List
+from config import settings
+from user_profile.profile_api import MOCK_PROFILES_DB
+from food_info.doordash.doordash_api import get_restaurant_menu
+from food_info.google_maps.gmaps_api import get_restaurant_reviews
+from food_info.beli.beli_api import get_restaurant_top_items
 import uuid
+from typing import List
 import json
 import sys
 import os
@@ -98,38 +96,59 @@ def generate_recommendation_mock(context: RecommendationContext, restaurant_id: 
     )
 
 async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_dislikes: List[str]) -> RecommendationContext:
-    """Gather all context needed for AI recommendation by calling actual APIs"""
+    """Gather all context needed for AI recommendation by calling API functions directly"""
     
-    async with httpx.AsyncClient() as client:
-        base_url = f"http://localhost:{settings.PORT}"
-        
-        # Get user profile from user_profile API
-        try:
-            user_profile_response = await client.get(f"{base_url}/user_profile/{user_id}")
-            user_profile = user_profile_response.json() if user_profile_response.status_code == 200 else {}
-        except Exception:
-            user_profile = {}
-        
-        # Get restaurant items from food_info API
-        try:
-            restaurant_items_response = await client.get(f"{base_url}/restaurants/{restaurant_id}/menu")
-            restaurant_items = restaurant_items_response.json() if restaurant_items_response.status_code == 200 else []
-        except Exception:
-            restaurant_items = []
-        
-        # Get restaurant reviews from food_info API
-        try:
-            reviews_response = await client.get(f"{base_url}/restaurants/{restaurant_id}/reviews")
-            restaurant_reviews = reviews_response.json() if reviews_response.status_code == 200 else []
-        except Exception:
-            restaurant_reviews = []
-        
-        # Get community top items from food_info API
-        try:
-            community_response = await client.get(f"{base_url}/restaurants/{restaurant_id}/community")
-            top_community_items = community_response.json() if community_response.status_code == 200 else []
-        except Exception:
-            top_community_items = []
+    # Get user profile directly from the database
+    user_profile_data = MOCK_PROFILES_DB.get(user_id)
+    if user_profile_data:
+        user_profile = {
+            "dietary_restrictions": [dr.dict() for dr in user_profile_data.dietary_restrictions],
+            "cuisine_preferences": user_profile_data.cuisine_preferences,
+            "flavor_profile": user_profile_data.flavor_profile,
+            "liked_foods": user_profile_data.liked_foods,
+            "disliked_foods": user_profile_data.disliked_foods
+        }
+    else:
+        user_profile = {
+            "dietary_restrictions": [],
+            "cuisine_preferences": [],
+            "flavor_profile": {},
+            "liked_foods": [],
+            "disliked_foods": []
+        }
+    
+    # Get restaurant menu directly
+    try:
+        menu_response = await get_restaurant_menu(restaurant_id)
+        restaurant_items = menu_response.items if menu_response else []
+        # Convert to dict format for Claude
+        restaurant_items = [item.dict() for item in restaurant_items]
+    except Exception as e:
+        print(f"Error getting menu: {e}")
+        restaurant_items = []
+    
+    # Get restaurant reviews directly
+    try:
+        reviews_response = await get_restaurant_reviews(restaurant_id)
+        restaurant_reviews = reviews_response.reviews if reviews_response else []
+        # Convert to dict format for Claude
+        restaurant_reviews = [review.dict() for review in restaurant_reviews]
+    except Exception as e:
+        print(f"Error getting reviews: {e}")
+        restaurant_reviews = []
+    
+    # Get community top items directly
+    try:
+        # Create a mock user for the function call
+        from auth.types.auth_types import UserResponse
+        mock_user = UserResponse(id=user_id, email="mock@example.com", name="Mock User")
+        top_items_response = await get_restaurant_top_items(restaurant_id, 10, mock_user)
+        top_community_items = top_items_response.top_items if top_items_response else []
+        # Convert to dict format for Claude
+        top_community_items = [item.dict() for item in top_community_items]
+    except Exception as e:
+        print(f"Error getting top items: {e}")
+        top_community_items = []
     
     return RecommendationContext(
         user_profile=user_profile,
@@ -217,6 +236,9 @@ async def get_recommendation(
             request.curr_dislikes
         )
         
+        print("DEBUG: Context for recs")
+        print(context)
+
         # Generate recommendation using Claude
         claude_response = await claude_client.generate_food_recommendation(
             user_profile=context.user_profile,

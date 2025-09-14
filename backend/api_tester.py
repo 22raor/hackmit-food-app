@@ -14,6 +14,7 @@ Usage:
 """
 
 import asyncio
+from h11 import Data
 import httpx
 import json
 import argparse
@@ -101,7 +102,9 @@ class APITester:
             return False
             
         profile_data = {
-            "dietary_restrictions": ["vegetarian"],
+            "dietary_restrictions": [
+                {"name": "vegetarian", "severity": "preference"}
+            ],
             "cuisine_preferences": [
                 {"cuisine_type": "Japanese", "preference_level": 5},
                 {"cuisine_type": "Italian", "preference_level": 4}
@@ -109,10 +112,16 @@ class APITester:
             "flavor_profile": {
                 "spicy_tolerance": 3,
                 "umami_preference": 5,
-                "sweet_preference": 2
+                "sweet_preference": 2,
+                "salty_preference": 4,
+                "sour_preference": 3,
+                "bitter_tolerance": 2
             },
-            "allergies": ["nuts"],
-            "favorite_dishes": ["sushi", "ramen"]
+            "liked_foods": [
+                {"name": "sushi", "cuisine_type": "Japanese"},
+                {"name": "ramen", "cuisine_type": "Japanese"}
+            ],
+            "price_range_preference": "mid-range"
         }
         
         async with httpx.AsyncClient() as client:
@@ -155,6 +164,7 @@ class APITester:
                 if response.status_code == 200:
                     data = response.json()
                     print("✅ Profile retrieval successful!")
+                    data = data['profile']
                     print(f"   Dietary restrictions: {data.get('dietary_restrictions', [])}")
                     print(f"   Cuisine preferences: {len(data.get('cuisine_preferences', []))} items")
                     print(f"   Spicy tolerance: {data.get('flavor_profile', {}).get('spicy_tolerance', 'N/A')}")
@@ -174,7 +184,7 @@ class APITester:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{self.base_url}/restaurants",
+                    f"{self.base_url}/restaurants/",
                     headers=self._get_headers()
                 )
                 
