@@ -279,7 +279,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get Restaurant List
+         * @description Get a list of restaurants (mock data for testing)
+         */
+        get: operations["get_restaurants_restaurants__get"];
         put?: never;
         /**
          * Get Nearby Restaurants
@@ -1464,6 +1468,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_restaurants_restaurants__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of restaurants with basic information */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NearbyRestaurantsResponse"];
                 };
             };
         };
