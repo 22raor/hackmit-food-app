@@ -117,6 +117,8 @@ async def get_current_user(
     Raises:
         HTTPException: 401 if token is invalid or user not found
     """
+    print('checking current user')
+    print(credentials)
     try:
         # Verify JWT token
         payload = verify_token(credentials.credentials)

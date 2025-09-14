@@ -1,4 +1,3 @@
-
 services:
   db:
     image: postgres:15
@@ -10,17 +9,16 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   api:
     build: .
-    ports:
-      - "8000:8000"
     env_file:
       - .env
     environment:
@@ -30,9 +28,9 @@ services:
       # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       # - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-}
-      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8000
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8000,https://foodly-hackmit.vercel.app,https://foodly.dag.gy,https://foodly-back.dag.gy
       - ENVIRONMENT=development
-      - DEBUG=true
+      - DEBUG=false
       - HOST=0.0.0.0
       - PORT=8000
     depends_on:
@@ -41,6 +39,23 @@ services:
     volumes:
       - .:/app
     command: uvicorn api_router:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # Required for HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:

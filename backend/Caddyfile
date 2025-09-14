@@ -1,0 +1,7 @@
+foodly-back.dag.gy {
+    # Enable gzip and zstd compression for better performance
+    encode zstd gzip
+    #uri strip_suffix /
+    # Reverse proxy incoming requests to the 'api' service on port 8000
+    reverse_proxy api:8000
+}

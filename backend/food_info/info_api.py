@@ -89,7 +89,7 @@ load_all_restaurants_on_startup()
     description="Get a list of restaurants from in-memory cache",
     response_description="List of restaurants with basic information",
 )
-async def get_restaurants(current_user: UserResponse = Depends(get_current_user)):
+async def get_restaurants():
     """Get a list of restaurants from in-memory cache"""
     return {
         "restaurants": RESTAURANTS_LIST_CACHE,
