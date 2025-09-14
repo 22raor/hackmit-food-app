@@ -27,7 +27,7 @@ claude_client = ClaudeClient(settings.ANTHROPIC_API_KEY)
 # Mock recommendation engine - replace with actual Claude integration later
 def generate_recommendation_mock(context: RecommendationContext, restaurant_id: str) -> FoodItemRecommendation:
     """Mock recommendation generation - replace with actual GPT call"""
-    
+
     # Simple mock logic based on dislikes
     mock_items = [
         {
@@ -42,7 +42,7 @@ def generate_recommendation_mock(context: RecommendationContext, restaurant_id: 
             "reasoning": "Based on your preference for umami flavors and seafood, this spicy tuna roll offers the perfect balance of heat and freshness. The community rates it highly for its quality ingredients."
         },
         {
-            "id": "rec_2", 
+            "id": "rec_2",
             "name": "Truffle Mushroom Pizza",
             "description": "Wood-fired pizza with truffle oil, wild mushrooms, and mozzarella",
             "price": 22.99,
@@ -53,10 +53,10 @@ def generate_recommendation_mock(context: RecommendationContext, restaurant_id: 
             "reasoning": "Given your sophisticated palate and preference for rich, earthy flavors, this truffle mushroom pizza represents the perfect elevated comfort food. Your friends have consistently rated similar items highly."
         }
     ]
-    
+
     # Filter out disliked items
     available_items = [item for item in mock_items if item["name"] not in context.current_dislikes]
-    
+
     if not available_items:
         # Fallback recommendation
         return FoodItemRecommendation(
@@ -71,10 +71,10 @@ def generate_recommendation_mock(context: RecommendationContext, restaurant_id: 
             reviews=[],
             reasoning="Since you've explored many options, I recommend trying the chef's special - it's often the most creative and well-executed dish."
         )
-    
+
     # Select first available item for mock
     selected = available_items[0]
-    
+
     return FoodItemRecommendation(
         id=selected["id"],
         name=selected["name"],
@@ -97,16 +97,16 @@ def generate_recommendation_mock(context: RecommendationContext, restaurant_id: 
 
 async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_dislikes: List[str]) -> RecommendationContext:
     """Gather all context needed for AI recommendation by calling API functions directly"""
-    
+
     # Get user profile directly from the database
     user_profile_data = MOCK_PROFILES_DB.get(user_id)
     if user_profile_data:
         user_profile = {
-            "dietary_restrictions": [dr.dict() for dr in user_profile_data.dietary_restrictions],
-            "cuisine_preferences": user_profile_data.cuisine_preferences,
-            "flavor_profile": user_profile_data.flavor_profile,
-            "liked_foods": user_profile_data.liked_foods,
-            "disliked_foods": user_profile_data.disliked_foods
+            "dietary_restrictions": [dr.dict() if hasattr(dr, 'dict') else dr for dr in user_profile_data.dietary_restrictions],
+            "cuisine_preferences": [cp.dict() if hasattr(cp, 'dict') else cp for cp in user_profile_data.cuisine_preferences],
+            "flavor_profile": user_profile_data.flavor_profile.dict() if user_profile_data.flavor_profile and hasattr(user_profile_data.flavor_profile, 'dict') else user_profile_data.flavor_profile,
+            "liked_foods": [lf.dict() if hasattr(lf, 'dict') else lf for lf in user_profile_data.liked_foods],
+            "disliked_foods": [df.dict() if hasattr(df, 'dict') else df for df in user_profile_data.disliked_foods]
         }
     else:
         user_profile = {
@@ -116,7 +116,7 @@ async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_d
             "liked_foods": [],
             "disliked_foods": []
         }
-    
+
     # Get restaurant menu directly
     try:
         menu_response = await get_restaurant_menu(restaurant_id)
@@ -126,7 +126,7 @@ async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_d
     except Exception as e:
         print(f"Error getting menu: {e}")
         restaurant_items = []
-    
+
     # Get restaurant reviews directly
     try:
         reviews_response = await get_restaurant_reviews(restaurant_id)
@@ -136,7 +136,7 @@ async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_d
     except Exception as e:
         print(f"Error getting reviews: {e}")
         restaurant_reviews = []
-    
+
     # Get community top items directly
     try:
         # Create a mock user for the function call
@@ -149,7 +149,7 @@ async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_d
     except Exception as e:
         print(f"Error getting top items: {e}")
         top_community_items = []
-    
+
     return RecommendationContext(
         user_profile=user_profile,
         restaurant_items=restaurant_items,
@@ -159,7 +159,7 @@ async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_d
         session_history=[]
     )
 
-@router.post("/{restaurant_id}", 
+@router.post("/{restaurant_id}",
              response_model=RecommendationResponse,
              summary="Get AI Food Recommendation",
              description="Get a personalized food recommendation using AI analysis of user preferences, restaurant menu, and community data",
@@ -212,30 +212,30 @@ async def get_recommendation(
 ):
     """
     Generate a personalized food recommendation using AI.
-    
+
     Analyzes user taste profile, current dislikes, restaurant menu, reviews,
     and community data to suggest the best food item with detailed reasoning.
-    
+
     Args:
         restaurant_id (str): Unique identifier for the restaurant
         request (RecommendationRequest): Current session dislikes and preferences
         current_user: Injected current user from JWT token
-        
+
     Returns:
         RecommendationResponse: AI-generated recommendation with confidence score
-        
+
     Raises:
         HTTPException: 500 if recommendation generation fails
     """
-    
+
     try:
         # Gather all context for the recommendation
         context = await gather_recommendation_context(
-            current_user.id, 
-            restaurant_id, 
+            current_user.id,
+            restaurant_id,
             request.curr_dislikes
         )
-        
+
         print("DEBUG: Context for recs")
         print(context)
 
@@ -248,7 +248,7 @@ async def get_recommendation(
             current_dislikes=context.current_dislikes,
             restaurant_name=f"Restaurant {restaurant_id}"
         )
-        
+
         # Convert Claude response to FoodItemRecommendation
         recommendation = FoodItemRecommendation(
             id=f"claude_rec_{uuid.uuid4()}",
@@ -262,20 +262,20 @@ async def get_recommendation(
             reviews=[],
             reasoning=claude_response.get("reasoning", "Recommended by our AI based on your taste profile")
         )
-        
+
         # Generate session ID for tracking
         session_id = str(uuid.uuid4())
-        
+
         # Use confidence score from Claude response
         confidence_score = claude_response.get("confidence", 0.85)
-        
+
         return RecommendationResponse(
             item=recommendation,
             confidence_score=confidence_score,
             session_id=session_id,
             alternatives=[]  # Could include backup recommendations
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -315,24 +315,24 @@ async def get_recommendation_context(
 ):
     """
     Get the data context used for generating recommendations.
-    
+
     Useful for debugging and understanding how the AI makes decisions.
     Shows user profile summary, available menu items, reviews, and community data.
-    
+
     Args:
         restaurant_id (str): Unique identifier for the restaurant
         current_user: Injected current user from JWT token
-        
+
     Returns:
         dict: Summary of recommendation context data
     """
-    
+
     context = await gather_recommendation_context(
         current_user.id,
         restaurant_id,
         []
     )
-    
+
     return {
         "user_profile_summary": context.user_profile,
         "available_items_count": len(context.restaurant_items),
