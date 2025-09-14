@@ -14,6 +14,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     logger.info("Application shutdown")
+
 
 app = FastAPI(
     title="Food Recommender API",
@@ -66,35 +68,34 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
     servers=[
-        {
-            "url": "http://localhost:8000",
-            "description": "Development server"
-        },
-        {
-            "url": "https://api.foodrecommender.com",
-            "description": "Production server"
-        }
+        {"url": "http://localhost:8000", "description": "Development server"},
+        {"url": "https://api.foodrecommender.com", "description": "Production server"},
     ],
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS if settings.ALLOWED_ORIGINS != ["*"] else ["*"], 
+    allow_origins=(
+        settings.ALLOWED_ORIGINS if settings.ALLOWED_ORIGINS != ["*"] else ["*"]
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/health", 
-         summary="Health Check",
-         description="Check if the API is running and healthy",
-         response_description="API health status",
-         tags=["System"])
+
+@app.get(
+    "/health",
+    summary="Health Check",
+    description="Check if the API is running and healthy",
+    response_description="API health status",
+    tags=["System"],
+)
 async def health_check():
     """
     Health check endpoint to verify API availability.
-    
+
     Returns:
         dict: API status, message, and version information
     """
@@ -102,18 +103,21 @@ async def health_check():
         "status": "healthy",
         "message": "Food Recommender API is running",
         "version": "1.0.0",
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
     }
 
-@app.get("/", 
-         summary="API Information",
-         description="Get basic information about the Food Recommender API",
-         response_description="API welcome message and navigation links",
-         tags=["System"])
+
+@app.get(
+    "/",
+    summary="API Information",
+    description="Get basic information about the Food Recommender API",
+    response_description="API welcome message and navigation links",
+    tags=["System"],
+)
 async def root():
     """
     Root endpoint providing API information and navigation links.
-    
+
     Returns:
         dict: Welcome message, documentation links, and version info
     """
@@ -121,32 +125,41 @@ async def root():
         "message": "Welcome to the Food Recommender API",
         "description": "A Tinder-style food recommendation app with AI-powered suggestions",
         "docs": "/docs",
-        "redoc": "/redoc", 
+        "redoc": "/redoc",
         "health": "/health",
         "version": "1.0.0",
         "endpoints": {
             "auth": "/auth",
-            "user_profile": "/user_profile", 
+            "user_profile": "/user_profile",
             "restaurants": "/restaurants",
-            "recommendations": "/recs"
-        }
+            "recommendations": "/recs",
+        },
     }
+
 
 app.include_router(auth_router)
 app.include_router(user_profile_router)
 app.include_router(food_info_router)
 app.include_router(recommender_router)
 
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Global exception handler for unhandled errors"""
     from fastapi import HTTPException, status
     from fastapi.responses import JSONResponse
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": f"Internal server error: {str(exc)}"}
+        content={"detail": f"Internal server error: {str(exc)}"},
     )
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=settings.HOST, port=settings.PORT, reload=settings.DEBUG, log_level="info")
+    uvicorn.run(
+        app,
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.DEBUG,
+        log_level="info",
+    )

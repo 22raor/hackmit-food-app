@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, status
 from .types.doordash_types import (
-    NearbyRestaurantsRequest, 
-    NearbyRestaurantsResponse, 
-    Restaurant, 
+    NearbyRestaurantsRequest,
+    NearbyRestaurantsResponse,
+    Restaurant,
     RestaurantMenu,
     MenuItem,
-    RestaurantLocation
+    RestaurantLocation,
 )
 from datetime import datetime
 from typing import List
@@ -23,11 +23,11 @@ MOCK_RESTAURANTS = [
             address="123 Main St",
             city="Boston",
             state="MA",
-            zip_code="02101"
+            zip_code="02101",
         ),
         rating=4.5,
         price_range="$$",
-        image_url="https://example.com/sakura.jpg"
+        image_url="https://example.com/sakura.jpg",
     ),
     Restaurant(
         id="rest_2",
@@ -39,12 +39,12 @@ MOCK_RESTAURANTS = [
             address="456 Oak Ave",
             city="Boston",
             state="MA",
-            zip_code="02101"
+            zip_code="02101",
         ),
         rating=4.2,
         price_range="$",
-        image_url="https://example.com/tonys.jpg"
-    )
+        image_url="https://example.com/tonys.jpg",
+    ),
 ]
 
 MOCK_MENUS = {
@@ -58,14 +58,14 @@ MOCK_MENUS = {
                 description="Shrimp tempura roll topped with avocado and eel sauce",
                 price=14.99,
                 category="Sushi Rolls",
-                image_url="https://example.com/dragon-roll.jpg"
+                image_url="https://example.com/dragon-roll.jpg",
             ),
             MenuItem(
                 id="item_2",
                 name="Miso Soup",
                 description="Traditional Japanese soup with tofu and seaweed",
                 price=3.99,
-                category="Appetizers"
+                category="Appetizers",
             ),
             MenuItem(
                 id="item_5",
@@ -73,9 +73,9 @@ MOCK_MENUS = {
                 description="Fresh salmon sashimi, 6 pieces",
                 price=12.99,
                 category="Sashimi",
-                image_url="https://example.com/salmon-sashimi.jpg"
-            )
-        ]
+                image_url="https://example.com/salmon-sashimi.jpg",
+            ),
+        ],
     ),
     "rest_2": RestaurantMenu(
         restaurant_id="rest_2",
@@ -87,14 +87,14 @@ MOCK_MENUS = {
                 description="Classic pizza with fresh mozzarella, tomato sauce, and basil",
                 price=16.99,
                 category="Pizza",
-                image_url="https://example.com/margherita.jpg"
+                image_url="https://example.com/margherita.jpg",
             ),
             MenuItem(
                 id="item_4",
                 name="Caesar Salad",
                 description="Crisp romaine lettuce with parmesan and croutons",
                 price=8.99,
-                category="Appetizers"
+                category="Appetizers",
             ),
             MenuItem(
                 id="item_6",
@@ -102,22 +102,23 @@ MOCK_MENUS = {
                 description="Classic pepperoni pizza with mozzarella cheese",
                 price=18.99,
                 category="Pizza",
-                image_url="https://example.com/pepperoni.jpg"
-            )
-        ]
-    )
+                image_url="https://example.com/pepperoni.jpg",
+            ),
+        ],
+    ),
 }
+
 
 @router.post("/nearby", response_model=NearbyRestaurantsResponse)
 async def get_nearby_restaurants(request: NearbyRestaurantsRequest):
     """Get nearby restaurants from DoorDash API"""
     # Mock implementation - replace with actual DoorDash API call
     filtered_restaurants = MOCK_RESTAURANTS.copy()
-    
+
     # Apply limit
     if request.limit:
-        filtered_restaurants = filtered_restaurants[:request.limit]
-    
+        filtered_restaurants = filtered_restaurants[: request.limit]
+
     return NearbyRestaurantsResponse(
         restaurants=filtered_restaurants,
         total_count=len(filtered_restaurants),
@@ -127,9 +128,10 @@ async def get_nearby_restaurants(request: NearbyRestaurantsRequest):
             address="Search Location",
             city="Boston",
             state="MA",
-            zip_code="02101"
-        )
+            zip_code="02101",
+        ),
     )
+
 
 @router.get("/restaurant/{restaurant_id}/menu", response_model=RestaurantMenu)
 async def get_restaurant_menu(restaurant_id: str):
@@ -138,10 +140,11 @@ async def get_restaurant_menu(restaurant_id: str):
     if not menu:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Menu not found for restaurant {restaurant_id}"
+            detail=f"Menu not found for restaurant {restaurant_id}",
         )
-    
+
     return menu
+
 
 @router.get("/restaurant/{restaurant_id}", response_model=Restaurant)
 async def get_restaurant_details(restaurant_id: str):
@@ -150,7 +153,7 @@ async def get_restaurant_details(restaurant_id: str):
     if not restaurant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Restaurant {restaurant_id} not found"
+            detail=f"Restaurant {restaurant_id} not found",
         )
-    
+
     return restaurant

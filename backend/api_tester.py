@@ -22,6 +22,7 @@ import sys
 import random
 from typing import Optional
 
+
 class APITester:
     def __init__(self, base_url: str = "http://localhost:8000"):
         self.base_url = base_url
@@ -44,7 +45,7 @@ class APITester:
                 response = await client.post(
                     f"{self.base_url}/auth/google",
                     json={"id_token": google_id_token},
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 if response.status_code == 200:
@@ -77,8 +78,7 @@ class APITester:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{self.base_url}/auth/me",
-                    headers=self._get_headers()
+                    f"{self.base_url}/auth/me", headers=self._get_headers()
                 )
 
                 if response.status_code == 200:
@@ -103,12 +103,10 @@ class APITester:
             return False
 
         profile_data = {
-            "dietary_restrictions": [
-                {"name": "pescetarian", "severity": "preference"}
-            ],
+            "dietary_restrictions": [{"name": "pescetarian", "severity": "preference"}],
             "cuisine_preferences": [
                 {"cuisine_type": "Japanese", "preference_level": 5},
-                {"cuisine_type": "Italian", "preference_level": 4}
+                {"cuisine_type": "Italian", "preference_level": 4},
             ],
             "flavor_profile": {
                 "spicy_tolerance": 3,
@@ -116,13 +114,13 @@ class APITester:
                 "sweet_preference": 2,
                 "salty_preference": 4,
                 "sour_preference": 3,
-                "bitter_tolerance": 2
+                "bitter_tolerance": 2,
             },
             "liked_foods": [
                 {"name": "sushi", "cuisine_type": "Japanese"},
-                {"name": "ramen", "cuisine_type": "Japanese"}
+                {"name": "ramen", "cuisine_type": "Japanese"},
             ],
-            "price_range_preference": "mid-range"
+            "price_range_preference": "mid-range",
         }
 
         async with httpx.AsyncClient() as client:
@@ -130,13 +128,17 @@ class APITester:
                 response = await client.post(
                     f"{self.base_url}/user_profile/{self.user_id}",
                     json=profile_data,
-                    headers=self._get_headers()
+                    headers=self._get_headers(),
                 )
 
                 if response.status_code == 200:
                     print("✅ Profile update successful!")
-                    print(f"   Updated dietary restrictions: {profile_data['dietary_restrictions']}")
-                    print(f"   Updated cuisine preferences: {len(profile_data['cuisine_preferences'])} items")
+                    print(
+                        f"   Updated dietary restrictions: {profile_data['dietary_restrictions']}"
+                    )
+                    print(
+                        f"   Updated cuisine preferences: {len(profile_data['cuisine_preferences'])} items"
+                    )
                     return True
                 else:
                     print(f"❌ Profile update failed: {response.status_code}")
@@ -159,16 +161,22 @@ class APITester:
             try:
                 response = await client.get(
                     f"{self.base_url}/user_profile/{self.user_id}",
-                    headers=self._get_headers()
+                    headers=self._get_headers(),
                 )
 
                 if response.status_code == 200:
                     data = response.json()
                     print("✅ Profile retrieval successful!")
-                    data = data['profile']
-                    print(f"   Dietary restrictions: {data.get('dietary_restrictions', [])}")
-                    print(f"   Cuisine preferences: {len(data.get('cuisine_preferences', []))} items")
-                    print(f"   Spicy tolerance: {data.get('flavor_profile', {}).get('spicy_tolerance', 'N/A')}")
+                    data = data["profile"]
+                    print(
+                        f"   Dietary restrictions: {data.get('dietary_restrictions', [])}"
+                    )
+                    print(
+                        f"   Cuisine preferences: {len(data.get('cuisine_preferences', []))} items"
+                    )
+                    print(
+                        f"   Spicy tolerance: {data.get('flavor_profile', {}).get('spicy_tolerance', 'N/A')}"
+                    )
                     return True
                 else:
                     print(f"❌ Profile retrieval failed: {response.status_code}")
@@ -185,21 +193,24 @@ class APITester:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
-                    f"{self.base_url}/restaurants/",
-                    headers=self._get_headers()
+                    f"{self.base_url}/restaurants/", headers=self._get_headers()
                 )
 
                 if response.status_code == 200:
                     data = response.json()
-                    restaurants = data if isinstance(data, list) else data.get('restaurants', [])
+                    restaurants = (
+                        data if isinstance(data, list) else data.get("restaurants", [])
+                    )
 
                     if restaurants:
-                        r_index = random.randint(0, len(restaurants)-1)
-                        restaurant_id = restaurants[r_index].get('id')
-                        restaurant_name = restaurants[r_index].get('name', 'Unknown')
+                        r_index = random.randint(0, len(restaurants) - 1)
+                        restaurant_id = restaurants[r_index].get("id")
+                        restaurant_name = restaurants[r_index].get("name", "Unknown")
                         print(f"✅ Restaurant list retrieved successfully!")
                         print(f"   Found {len(restaurants)} restaurants")
-                        print(f"   Using restaurant: {restaurant_name} (ID: {restaurant_id})")
+                        print(
+                            f"   Using restaurant: {restaurant_name} (ID: {restaurant_id})"
+                        )
                         return restaurant_id
                     else:
                         print("⚠️ No restaurants found in response")
@@ -216,21 +227,19 @@ class APITester:
         """Test getting AI recommendation for a restaurant"""
         print(f"\n🤖 Testing AI recommendation for restaurant {restaurant_id}...")
 
-        recommendation_data = {
-            "current_dislikes": ["spicy food", "raw fish"]
-        }
+        recommendation_data = {"current_dislikes": ["spicy food", "raw fish"]}
 
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
                     f"{self.base_url}/recs/{restaurant_id}",
                     json=recommendation_data,
-                    headers=self._get_headers()
+                    headers=self._get_headers(),
                 )
 
                 if response.status_code == 200:
                     data = response.json()
-                    item = data.get('item', {})
+                    item = data.get("item", {})
                     print(data)
                     print("✅ AI recommendation successful!")
                     print(f"   Recommended item: {item.get('name', 'Unknown')}")
@@ -282,11 +291,14 @@ class APITester:
         print("🎉 All tests completed successfully!")
         return True
 
+
 async def main():
     parser = argparse.ArgumentParser(description="Test Food Recommender API")
     parser.add_argument("--google-id", help="Google OAuth ID token")
     parser.add_argument("--mock-google-id", help="Mock Google ID (email) for testing")
-    parser.add_argument("--base-url", default="http://localhost:8000", help="API base URL")
+    parser.add_argument(
+        "--base-url", default="http://localhost:8000", help="API base URL"
+    )
 
     args = parser.parse_args()
 
@@ -296,7 +308,7 @@ async def main():
 
     # Use mock token if provided, otherwise use real Google ID token
     # google_token = 'mc..gDAMcrXIg_e9wEGLB5NWOzl5vDt9YlKHqniHUDbRdzlqV-yb96GHfjzxt96Zl7IcWNzgFdn7ZgROFSSU_s6FzOIJCjigeiL8raPr-wPvleNJbrd5qSaK9YZ6uEOtEGEM0LB_2LaObRGROjQNCG6yPDcHNe_MMbAkfj7nwgwuaT0Fv46qX5algMPf08t9rQss9rbBV2ZHGQX_j2ma8Dt43_ZTXt1IfGXv5SzA5T6k52ySXvdKqEWARsFZiI1EClCSPFV-oqbkzD5kuqqBTWxvKrkFbT4iNdgeF27yB_hhy0ZeXUBr1dolzGfpyJYiDLw3ZDd74ccoDsit-5AaWkvrpw'
-    google_token = 'mock'
+    google_token = "mock"
 
     tester = APITester(args.base_url)
 
@@ -309,6 +321,7 @@ async def main():
     except Exception as e:
         print(f"\n❌ Unexpected error: {str(e)}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

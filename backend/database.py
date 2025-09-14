@@ -1,6 +1,7 @@
 """
 Database configuration and setup for the Food Recommender API
 """
+
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Create SQLAlchemy engine
 engine = create_engine(
-    settings.DATABASE_URL or "sqlite:///./food_recommender.db",
-    echo=settings.DEBUG
+    settings.DATABASE_URL or "sqlite:///./food_recommender.db", echo=settings.DEBUG
 )
 
 # Create SessionLocal class
@@ -21,6 +21,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Create Base class for models
 Base = declarative_base()
 
+
 # Dependency to get DB session
 def get_db():
     db = SessionLocal()
@@ -28,6 +29,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 def init_db():
     """Initialize database tables"""

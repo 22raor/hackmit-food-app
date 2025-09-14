@@ -1,8 +1,8 @@
 import anthropic
 from typing import List, Dict, Any, Optional
 import os
-from datetime import datetime
 import json
+
 
 class ClaudeClient:
     def __init__(self, api_key: Optional[str] = None):
@@ -20,20 +20,19 @@ class ClaudeClient:
         reviews: List[str],
         community_favorites: List[Dict[str, Any]],
         current_dislikes: List[str],
-        restaurant_name: str
+        restaurant_name: str,
     ) -> Dict[str, Any]:
         """Generate food recommendation using Claude Haiku 3"""
 
         # Build the prompt
         prompt = self._build_recommendation_prompt(
-            user_profile=user_profile,
-            restaurant_items=restaurant_items,
-            reviews=reviews,
-            community_favorites=community_favorites,
-            current_dislikes=current_dislikes,
-            restaurant_name=restaurant_name
+            user_profile,
+            restaurant_items,
+            reviews,
+            community_favorites,
+            current_dislikes,
+            restaurant_name,
         )
-
         try:
             # Mock response if no API key
             if not self.client:
@@ -45,14 +44,8 @@ class ClaudeClient:
                 model="claude-3-haiku-20240307",
                 max_tokens=500,
                 temperature=0.7,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
+                messages=[{"role": "user", "content": prompt}],
             )
-            print(response)
 
             return self._parse_claude_response(response.content[0].text)
 
@@ -67,7 +60,7 @@ class ClaudeClient:
         reviews: List[str],
         community_favorites: List[Dict[str, Any]],
         current_dislikes: List[str],
-        restaurant_name: str
+        restaurant_name: str,
     ) -> str:
         """Build the Claude prompt for food recommendation"""
 
@@ -98,9 +91,7 @@ Please recommend ONE menu item that would be perfect for this user. Respond in J
     "recommended_item": "exact menu item name",
     "reasoning": "detailed explanation of why this item matches the user's preferences",
     "confidence": 0.85,
-    "price": "menu_item_price",
-    "image_url": "menu_item_image_url",
-    "category": "menu_item_category"
+    "id": "menu_item_id"
 }}
 
 Make sure to:
@@ -115,50 +106,64 @@ Make sure to:
     def _format_menu_items(self, items: List[Dict[str, Any]]) -> str:
         """Format menu items for the prompt"""
         formatted = []
-        for i,item in enumerate(items):
-            formatted.append(f"- id: {i+1} name: {item.get('name', 'Unknown')} description: {item.get('description', '')} price: (${item.get('price', 0)})")
-        return '\n'.join(formatted)
+        for i, item in enumerate(items):
+            formatted.append(
+                f"- id: {i+1} name: {item.get('name', 'Unknown')} "
+                f"description: {item.get('description', '')} "
+                f"price: (${item.get('price', 0)}) "
+                f"category: {item.get('category', 'Unknown')}"
+            )
+        return "\n".join(formatted)
 
     def _format_reviews(self, reviews: List[str]) -> str:
         """Format reviews for the prompt"""
-        formatted = []
-        for review in reviews:
-            formatted.append(review)
-        return '\n'.join(formatted)
+        return "\n".join(reviews)
 
     def _format_community_favorites(self, favorites: List[Dict[str, Any]]) -> str:
         """Format community favorites for the prompt"""
         formatted = []
         for fav in favorites:
             formatted.append(f"- name: {fav.get('name', 'Unknown')}")
-        return '\n'.join(formatted)
+        return "\n".join(formatted)
 
-    def _mock_claude_response(self, restaurant_items: List[Dict[str, Any]], current_dislikes: List[str]) -> Dict[str, Any]:
+    def _mock_claude_response(
+        self, restaurant_items: List[Dict[str, Any]], current_dislikes: List[str]
+    ) -> Dict[str, Any]:
         """Mock Claude response for testing"""
-        available_items = [item for item in restaurant_items if item.get('name') not in current_dislikes]
+        available_items = [
+            item
+            for item in restaurant_items
+            if item.get("name") not in current_dislikes
+        ]
 
         if available_items:
             selected = available_items[0]
             return {
-                "recommended_item": selected.get('name', 'Chef Special'),
-                "reasoning": f"Based on your taste preferences, {selected.get('name', 'this item')} offers the perfect balance of flavors you enjoy. The fresh ingredients and expert preparation make it a standout choice.",
-                "confidence": 0.85
+                "recommended_item": selected.get("name", "Chef Special"),
+                "reasoning": (
+                    f"Based on your taste preferences, {selected.get('name', 'this item')} "
+                    "offers the perfect balance of flavors you enjoy. The fresh ingredients "
+                    "and expert preparation make it a standout choice."
+                ),
+                "confidence": 0.85,
             }
-        else:
-            return {
-                "recommended_item": "Chef's Special",
-                "reasoning": "Given your refined palate and the items you've explored, I recommend trying the chef's special - it represents the restaurant's creativity and expertise.",
-                "confidence": 0.75
-            }
+
+        return {
+            "recommended_item": "Chef's Special",
+            "reasoning": (
+                "Given your refined palate and the items you've explored, I recommend "
+                "trying the chef's special - it represents the restaurant's creativity and expertise."
+            ),
+            "confidence": 0.75,
+        }
 
     def _parse_claude_response(self, response_text: str) -> Dict[str, Any]:
         """Parse Claude response text into structured data"""
         try:
             return json.loads(response_text)
-        except:
-            # Fallback parsing if JSON parsing fails
+        except json.JSONDecodeError:
             return {
                 "recommended_item": "Chef's Special",
                 "reasoning": response_text,
-                "confidence": 0.7
+                "confidence": 0.7,
             }
