@@ -10,7 +10,7 @@ import { TasteProfileSetup } from "@/components/taste-profile-setup"
 export default function Home() {
   const { data: session } = useSession()
   const { user, loading: userLoading, error, isAuthenticated } = useUser()
-  const { hasProfile, loading: profileLoading } = useUserProfile(user?.id)
+  const { hasProfile, loading: profileLoading, refreshProfile } = useUserProfile(user?.id)
 
   if (userLoading || profileLoading) {
     return (
@@ -34,8 +34,8 @@ export default function Home() {
       <TasteProfileSetup
         userId={user.id}
         onComplete={() => {
-          // Force a page reload to refresh the user profile data
-          window.location.reload()
+          // Refresh the profile data to update the hasProfile state
+          refreshProfile()
         }}
       />
     )
