@@ -14,6 +14,7 @@ import uuid
 import json
 import sys
 import os
+import httpx
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -97,51 +98,44 @@ def generate_recommendation_mock(context: RecommendationContext, restaurant_id: 
     )
 
 async def gather_recommendation_context(user_id: str, restaurant_id: str, curr_dislikes: List[str]) -> RecommendationContext:
-    """Gather all context needed for GPT recommendation"""
+    """Gather all context needed for AI recommendation by calling actual APIs"""
     
-    # In a real implementation, these would be actual API calls
-    # For now, using mock data
-    
-    mock_user_profile = {
-        "dietary_restrictions": [],
-        "cuisine_preferences": [{"cuisine_type": "Japanese", "preference_level": 5}],
-        "flavor_profile": {
-            "spicy_tolerance": 4,
-            "umami_preference": 5,
-            "sweet_preference": 3
-        }
-    }
-    
-    mock_restaurant_items = [
-        {
-            "name": "Dragon Roll",
-            "description": "Shrimp tempura roll topped with avocado and eel sauce",
-            "price": 14.99,
-            "category": "Sushi Rolls"
-        }
-    ]
-    
-    mock_reviews = [
-        {
-            "author": "john_d",
-            "rating": 5,
-            "text": "Amazing sushi! The Dragon Roll was absolutely delicious."
-        }
-    ]
-    
-    mock_community_items = [
-        {
-            "name": "Dragon Roll",
-            "popularity_score": 95.0,
-            "friend_recommendations": 8
-        }
-    ]
+    async with httpx.AsyncClient() as client:
+        base_url = f"http://localhost:{settings.PORT}"
+        
+        # Get user profile from user_profile API
+        try:
+            user_profile_response = await client.get(f"{base_url}/user_profile/{user_id}")
+            user_profile = user_profile_response.json() if user_profile_response.status_code == 200 else {}
+        except Exception:
+            user_profile = {}
+        
+        # Get restaurant items from food_info API
+        try:
+            restaurant_items_response = await client.get(f"{base_url}/restaurants/{restaurant_id}/menu")
+            restaurant_items = restaurant_items_response.json() if restaurant_items_response.status_code == 200 else []
+        except Exception:
+            restaurant_items = []
+        
+        # Get restaurant reviews from food_info API
+        try:
+            reviews_response = await client.get(f"{base_url}/restaurants/{restaurant_id}/reviews")
+            restaurant_reviews = reviews_response.json() if reviews_response.status_code == 200 else []
+        except Exception:
+            restaurant_reviews = []
+        
+        # Get community top items from food_info API
+        try:
+            community_response = await client.get(f"{base_url}/restaurants/{restaurant_id}/community")
+            top_community_items = community_response.json() if community_response.status_code == 200 else []
+        except Exception:
+            top_community_items = []
     
     return RecommendationContext(
-        user_profile=mock_user_profile,
-        restaurant_items=mock_restaurant_items,
-        restaurant_reviews=mock_reviews,
-        top_community_items=mock_community_items,
+        user_profile=user_profile,
+        restaurant_items=restaurant_items,
+        restaurant_reviews=restaurant_reviews,
+        top_community_items=top_community_items,
         current_dislikes=curr_dislikes,
         session_history=[]
     )
