@@ -13,6 +13,7 @@ Usage:
     python api_tester.py --mock-google-id "test@example.com"
 """
 
+import traceback
 import asyncio
 from h11 import Data
 import httpx
@@ -229,7 +230,7 @@ class APITester:
 
         recommendation_data = {"current_dislikes": ["spicy food", "raw fish"]}
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             try:
                 response = await client.post(
                     f"{self.base_url}/recs/{restaurant_id}",
@@ -253,7 +254,8 @@ class APITester:
                     return False
 
             except Exception as e:
-                print(f"❌ Recommendation error: {str(e)}")
+                tb_str = traceback.format_exc()
+                print(f"❌ Recommendation error: {str(e)}\nTraceback:\n{tb_str}")
                 return False
 
     async def run_full_test(self, google_id_token: str) -> bool:

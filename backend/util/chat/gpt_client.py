@@ -7,9 +7,11 @@ import json
 class ClaudeClient:
     def __init__(self, api_key: Optional[str] = None):
         """Initialize Claude client with API key"""
-        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        self.api_key = os.getenv("ANTHROPIC_API_KEY")
+        # print(self.api_key)
         if self.api_key:
             self.client = anthropic.Anthropic(api_key=self.api_key)
+            # print("client on init", self.client)
         else:
             self.client = None
 
@@ -35,22 +37,32 @@ class ClaudeClient:
         )
         try:
             # Mock response if no API key
-            if not self.client:
+            print("client on call", self.client)
+            if self.client == None:
                 print("MOCKED API RESPONSE")
                 return self._mock_claude_response(restaurant_items, current_dislikes)
 
             # Actual Claude API call
             response = self.client.messages.create(
-                model="claude-3-haiku-20240307",
-                max_tokens=500,
+                model="claude-sonnet-4-20250514",
+                max_tokens=5000,
                 temperature=0.7,
-                messages=[{"role": "user", "content": prompt}],
+                system=prompt,
+                messages=[{"role": "user", "content": "generate next recommendation"}],
             )
 
-            return self._parse_claude_response(response.content[0].text)
+            print('received api response')
+
+            res = self._parse_claude_response(response.content[0].text)
+            print(res)
+            return res
 
         except Exception as e:
-            print(f"Claude API error: {e}")
+            import traceback
+            # Format the traceback as a string
+            tb_str = traceback.format_exc()
+            print(f"Claude API error: {e}\nTraceback:\n{tb_str}")
+            # print(f"Claude API error: {e.with_traceback(TracebackType)}")
             return self._mock_claude_response(restaurant_items, current_dislikes)
 
     def _build_recommendation_prompt(
@@ -141,7 +153,7 @@ Make sure to:
             return {
                 "recommended_item": selected.get("name", "Chef Special"),
                 "reasoning": (
-                    f"Based on your taste preferences, {selected.get('name', 'this item')} "
+                    f"MOCK MF Based on your taste preferences, {selected.get('name', 'this item')} "
                     "offers the perfect balance of flavors you enjoy. The fresh ingredients "
                     "and expert preparation make it a standout choice."
                 ),
@@ -151,7 +163,7 @@ Make sure to:
         return {
             "recommended_item": "Chef's Special",
             "reasoning": (
-                "Given your refined palate and the items you've explored, I recommend "
+                "u fuck this is MOCK Given your refined palate and the items you've explored, I recommend "
                 "trying the chef's special - it represents the restaurant's creativity and expertise."
             ),
             "confidence": 0.75,
@@ -160,8 +172,21 @@ Make sure to:
     def _parse_claude_response(self, response_text: str) -> Dict[str, Any]:
         """Parse Claude response text into structured data"""
         try:
-            return json.loads(response_text)
-        except json.JSONDecodeError:
+            parsed = json.loads(response_text)
+            # print(f"Successfully parsed Claude response: {parsed}")
+            
+            # Ensure we have the required fields
+            result = {
+                "recommended_item": parsed.get("recommended_item", "Chef's Special"),
+                "reasoning": parsed.get("reasoning", "AI-generated recommendation"),
+                "confidence": parsed.get("confidence", 0.7)
+            }
+            
+            return result
+            
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing failed: {e}")
+            print(f"Raw response text: {response_text}")
             return {
                 "recommended_item": "Chef's Special",
                 "reasoning": response_text,

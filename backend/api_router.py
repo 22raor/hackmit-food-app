@@ -8,11 +8,15 @@ from recommender.recs_api import router as recommender_router
 from config import settings
 from database import init_db
 import uvicorn
+import os
 import logging
 
+
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
+
+# print(os.environ)
 
 
 @asynccontextmanager

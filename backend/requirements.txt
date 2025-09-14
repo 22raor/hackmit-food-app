@@ -3,7 +3,7 @@ uvicorn==0.24.0
 pydantic==2.5.0
 python-jose==3.3.0
 python-multipart==0.0.6
-anthropic==0.7.8
+anthropic
 httpx==0.25.2
 python-dotenv==1.0.0
 google-auth==2.23.4
