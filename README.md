@@ -1,3 +1,5 @@
+# Hackmit Food App
+
 # Food Recommender API
 
 A Tinder-style food recommendation app with GPT-powered suggestions that helps users discover their perfect meal through an intuitive swipe interface.
