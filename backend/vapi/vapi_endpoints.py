@@ -48,7 +48,7 @@ async def get_user_cart(request: VapiRequest):
     """Get Items currently in the user cart for the session."""
     my_tool_call = None
     for tool_call in request.message.toolCalls:
-        if tool_call.function.name == "getRestaurantInfo":
+        if tool_call.function.name == "getUserCart":
             my_tool_call = tool_call
             break
     if not my_tool_call:
@@ -58,8 +58,7 @@ async def get_user_cart(request: VapiRequest):
         args = json.loads(args)
 
     user_id = args.get("user_id")
-    item_id = args.get("item_id")
-    if not user_id or not item_id:
+    if not user_id:
         raise HTTPException(status_code=400, detail="Invalid arguments")
 
     if user_id not in USER_CARTS:
@@ -79,12 +78,12 @@ async def get_user_cart(request: VapiRequest):
     }
 
 
-@router.post("/user_cart")
+@router.post("/user-cart")
 async def add_item_to_cart(request: VapiRequest):
     """Allow the user to add items to their cart."""
     my_tool_call = None
     for tool_call in request.message.toolCalls:
-        if tool_call.function.name == "getRestaurantInfo":
+        if tool_call.function.name == "addItemToCart":
             my_tool_call = tool_call
             break
     if not my_tool_call:
