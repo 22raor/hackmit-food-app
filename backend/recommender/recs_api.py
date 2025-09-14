@@ -146,18 +146,31 @@ async def get_recommendation(
             restaurant_name=restaurant_name,
         )
 
+        # Extract recommended item name from Claude respons
+        found_item = {}
+        item_name = claude_response.get("recommended_item", "Chef's Special").strip().lower()
+        for item in restaurant_data.get("menu_items", []):
+            if item["name"].strip().lower()  == item_name:
+                found_item = item
+
+        try:
+            price = found_item["price"]
+            price = price.replace("$", "").replace("$$", "").replace("or", "").replace(" ", "")
+            price = float(price)
+        except:
+            price = 15.99
+
+
         # Convert Claude response to FoodItemRecommendation
         recommendation = FoodItemRecommendation(
             id=f"claude_rec_{uuid.uuid4()}",
             name=claude_response.get("recommended_item", "Chef's Special"),
             description="AI-recommended item based on your preferences",
-            price=claude_response.get(
-                "price", 15.99
-            ),  # Default price - could extract from menu data
-            image_url=claude_response.get(
+            price=price,
+            image_url=found_item.get(
                 "image_url", "https://example.com/default_image.jpg"
             ),
-            category=claude_response.get("category", "AI Recommendation"),
+            category=found_item.get("category", "AI Recommendation"),
             ingredients=[],
             allergens=[],
             calories=300,
