@@ -11,7 +11,7 @@ export async function GET(
 ) {
     try {
         const session = await auth();
-        
+
         if (!session?.access_token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -23,6 +23,8 @@ export async function GET(
                 'Content-Type': 'application/json',
             },
         });
+      console.log(response);
+      console.log(session);
 
         if (!response.ok) {
             const errorData = await response.text();
