@@ -29,3 +29,5 @@ Thumbs.db
 # Distribution and packaging
 dist/
 build/
+
+*/__pycache__/
