@@ -14,7 +14,7 @@ logger.setLevel(logging.ERROR)
 
 # Create SQLAlchemy engine
 engine = create_engine(
-    settings.DATABASE_URL or "sqlite:///./food_recommender.db", echo=settings.DEBUG
+    settings.DATABASE_URL or "sqlite:///./food_recommender.db", echo=False
 )
 
 # Create SessionLocal class
