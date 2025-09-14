@@ -17,10 +17,11 @@ import traceback
 import asyncio
 from h11 import Data
 import httpx
-import json
+import asyncio
 import argparse
 import sys
 import random
+import os
 from typing import Optional
 
 
@@ -56,7 +57,7 @@ class APITester:
 
                     print(f"✅ Authentication successful!")
                     print(f"   User ID: {self.user_id}")
-                    print(f"   JWT Token: {self.jwt_token[:20]}...")
+                    print(f"   JWT Token: {self.jwt_token}")
                     print(f"   Is New User: {data.get('is_new_user', False)}")
                     return True
                 else:
@@ -224,6 +225,58 @@ class APITester:
                 print(f"❌ Restaurant retrieval error: {str(e)}")
                 return None
 
+    async def test_upload_menu(self) -> str:
+        """Test uploading menu image and creating restaurant data"""
+        print("\n📸 Testing menu upload and OCR processing...")
+        
+        menu_image_path = "ocr/menu.png"
+        
+        # Check if menu image exists
+        if not os.path.exists(menu_image_path):
+            print(f"❌ Menu image not found at {menu_image_path}")
+            return None
+            
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            try:
+                # Prepare form data
+                with open(menu_image_path, "rb") as image_file:
+                    files = {"image": ("menu.png", image_file, "image/png")}
+                    data = {
+                        "name": "Boston Shawarma",
+                        "latitude": 42.341121,
+                        "longitude": -71.087783,
+                        "city": "Boston"
+                    }
+                    
+                    response = await client.post(
+                        f"{self.base_url}/restaurants/upload-menu",
+                        files=files,
+                        data=data,
+                        headers={"Authorization": f"Bearer {self.jwt_token}"}
+                    )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    restaurant_id = data.get("restaurant_id")
+                    restaurant_name = data.get("restaurant_data", {}).get("name", "Unknown")
+                    menu_items_count = len(data.get("restaurant_data", {}).get("menu_items", []))
+                    
+                    print(f"✅ Menu upload successful!")
+                    print(f"   Restaurant: {restaurant_name}")
+                    print(f"   Restaurant ID: {restaurant_id}")
+                    print(f"   Menu items extracted: {menu_items_count}")
+                    print(f"   Message: {data.get('message')}")
+                    
+                    return restaurant_id
+                else:
+                    print(f"❌ Menu upload failed: {response.status_code}")
+                    print(f"   Response: {response.text}")
+                    return None
+                    
+            except Exception as e:
+                print(f"❌ Menu upload error: {str(e)}")
+                return None
+
     async def test_get_recommendation(self, restaurant_id: str) -> bool:
         """Test getting AI recommendation for a restaurant"""
         print(f"\n🤖 Testing AI recommendation for restaurant {restaurant_id}...")
@@ -279,11 +332,15 @@ class APITester:
         if not await self.test_get_user_profile():
             return False
 
-        # Step 5: Get restaurants
-        restaurant_id = await self.test_get_restaurants()
+        # Step 5: Upload menu and create restaurant via OCR
+        restaurant_id = await self.test_upload_menu()
         if not restaurant_id:
-            print("⚠️ Skipping recommendation test - no restaurant ID available")
-            return True
+            print("⚠️ Menu upload failed, trying regular restaurant list...")
+            # Fallback to regular restaurant list
+            restaurant_id = await self.test_get_restaurants()
+            if not restaurant_id:
+                print("⚠️ Skipping recommendation test - no restaurant ID available")
+                return True
 
         # Step 6: Get AI recommendation
         if not await self.test_get_recommendation(restaurant_id):

@@ -1,7 +1,7 @@
 import re
 import json
 import os
-from gmap import enrich_with_maps
+from gmap import enrich_with_maps, get_popular_items_info
 from beli import Beli
 from dotenv import load_dotenv
 from doordash_scrape import get_nearby_restaurants, process_doordash_url
