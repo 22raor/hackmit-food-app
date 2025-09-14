@@ -148,18 +148,24 @@ async def get_recommendation(
 
         # Extract recommended item name from Claude respons
         found_item = {}
-        item_name = claude_response.get("recommended_item", "Chef's Special").strip().lower()
+        item_name = (
+            claude_response.get("recommended_item", "Chef's Special").strip().lower()
+        )
         for item in restaurant_data.get("menu_items", []):
-            if item["name"].strip().lower()  == item_name:
+            if item["name"].strip().lower() == item_name:
                 found_item = item
 
         try:
             price = found_item["price"]
-            price = price.replace("$", "").replace("$$", "").replace("or", "").replace(" ", "")
+            price = (
+                price.replace("$", "")
+                .replace("$$", "")
+                .replace("or", "")
+                .replace(" ", "")
+            )
             price = float(price)
         except:
             price = 15.99
-
 
         # Convert Claude response to FoodItemRecommendation
         recommendation = FoodItemRecommendation(

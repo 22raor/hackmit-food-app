@@ -5,6 +5,7 @@ from auth.auth_api import router as auth_router
 from user_profile.profile_api import router as user_profile_router
 from food_info.info_api import router as food_info_router
 from recommender.recs_api import router as recommender_router
+from vapi.vapi_endpoints import router as vapi_router
 from config import settings
 from database import init_db
 import uvicorn
@@ -34,26 +35,26 @@ app = FastAPI(
     title="Food Recommender API",
     description="""
     ## 🍔 Food Recommender API
-    
+
     A Tinder-style food recommendation app that helps users discover food items by swiping through restaurant menus with Claude Haiku 3 AI-powered personalized suggestions.
-    
+
     ### Key Features:
     - **Google OAuth Authentication**: Secure login with Google accounts
     - **Restaurant Discovery**: Browse restaurants via DoorDash, Google Maps, and Beli integrations
     - **Personalized Recommendations**: Claude Haiku 3 AI-powered food suggestions based on user preferences and taste profiles
     - **User Profiles**: Manage dietary preferences, allergies, and taste profiles
     - **Swipe Interface**: Tinder-style interface for discovering food items
-    
+
     ### Authentication:
     1. Use `/auth/google` endpoint with Google ID token to authenticate
     2. Include the returned JWT token in the `Authorization` header as `Bearer <token>` for all authenticated requests
-    
+
     ### API Structure:
     - **Auth**: `/auth/*` - Authentication and user management
     - **User Profile**: `/user_profile/*` - User preferences and taste profiles
     - **Restaurants**: `/restaurants/*` - Restaurant and menu data from multiple sources
     - **Recommendations**: `/recs/*` - AI-powered food recommendations
-    
+
     ### External Integrations:
     - **DoorDash**: Restaurant listings and menus
     - **Google Maps**: Restaurant reviews and place details
@@ -80,10 +81,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=(
-        settings.ALLOWED_ORIGINS if settings.ALLOWED_ORIGINS != ["*"] else ["*"]
-    ),
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -145,6 +144,7 @@ app.include_router(auth_router)
 app.include_router(user_profile_router)
 app.include_router(food_info_router)
 app.include_router(recommender_router)
+app.include_router(vapi_router)
 
 
 @app.exception_handler(Exception)

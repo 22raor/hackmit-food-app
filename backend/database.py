@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from config import settings
 import logging
 
-logger = logging.getLogger('sqlalchemy.engine.Engine')
+logger = logging.getLogger("sqlalchemy.engine.Engine")
 logger.setLevel(logging.ERROR)
 
 

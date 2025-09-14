@@ -51,7 +51,7 @@ class ClaudeClient:
                 messages=[{"role": "user", "content": "generate next recommendation"}],
             )
 
-            print('received api response')
+            print("received api response")
 
             res = self._parse_claude_response(response.content[0].text)
             print(res)
@@ -59,6 +59,7 @@ class ClaudeClient:
 
         except Exception as e:
             import traceback
+
             # Format the traceback as a string
             tb_str = traceback.format_exc()
             print(f"Claude API error: {e}\nTraceback:\n{tb_str}")
@@ -174,16 +175,16 @@ Make sure to:
         try:
             parsed = json.loads(response_text)
             # print(f"Successfully parsed Claude response: {parsed}")
-            
+
             # Ensure we have the required fields
             result = {
                 "recommended_item": parsed.get("recommended_item", "Chef's Special"),
                 "reasoning": parsed.get("reasoning", "AI-generated recommendation"),
-                "confidence": parsed.get("confidence", 0.7)
+                "confidence": parsed.get("confidence", 0.7),
             }
-            
+
             return result
-            
+
         except json.JSONDecodeError as e:
             print(f"JSON parsing failed: {e}")
             print(f"Raw response text: {response_text}")

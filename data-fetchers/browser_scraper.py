@@ -36,8 +36,8 @@ def get_restaurant_links(driver, max_restaurants=10):
             'a[href*="/store/"]',
             '[data-anchor-id*="StoreCard"]',
             '[data-testid*="store-card"] a',
-            '.store-card a',
-            'a[data-testid="store-card"]'
+            ".store-card a",
+            'a[data-testid="store-card"]',
         ]
 
         restaurant_elements = []
@@ -46,20 +46,24 @@ def get_restaurant_links(driver, max_restaurants=10):
                 elements = driver.find_elements(By.CSS_SELECTOR, selector)
                 if elements:
                     restaurant_elements = elements
-                    print(f"Found {len(elements)} restaurants using selector: {selector}")
+                    print(
+                        f"Found {len(elements)} restaurants using selector: {selector}"
+                    )
                     break
             except NoSuchElementException:
                 continue
 
         if not restaurant_elements:
-            print("No restaurant elements found. The page structure might have changed.")
+            print(
+                "No restaurant elements found. The page structure might have changed."
+            )
             return restaurant_links
 
         # Extract links from the found elements
         for i, element in enumerate(restaurant_elements[:max_restaurants]):
             try:
-                link = element.get_attribute('href')
-                if link and '/store/' in link:
+                link = element.get_attribute("href")
+                if link and "/store/" in link:
                     restaurant_links.append(link)
                     print(f"Restaurant {i+1}: {link}")
             except Exception as e:
@@ -79,7 +83,7 @@ def get_restaurant_links(driver, max_restaurants=10):
 def save_links_to_file(links, filename="restaurant_links.txt"):
     """Save restaurant links to a text file"""
     try:
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             for i, link in enumerate(links, 1):
                 f.write(f"{i}. {link}\n")
         print(f"Saved {len(links)} restaurant links to {filename}")
@@ -112,7 +116,7 @@ def main():
             print("Warning: You don't appear to be on a DoorDash page.")
             print("Please navigate to a DoorDash restaurant listing page first.")
             response = input("Continue anyway? (y/n): ")
-            if response.lower() != 'y':
+            if response.lower() != "y":
                 return
 
         # Extract restaurant links
@@ -124,7 +128,9 @@ def main():
             save_links_to_file(links)
             print(f"\nSuccessfully extracted {len(links)} restaurant links!")
         else:
-            print("\nNo restaurant links found. Make sure you're on a DoorDash page with restaurant listings.")
+            print(
+                "\nNo restaurant links found. Make sure you're on a DoorDash page with restaurant listings."
+            )
 
     except Exception as e:
         print(f"An error occurred: {e}")
