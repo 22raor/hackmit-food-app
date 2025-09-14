@@ -10,6 +10,7 @@ import SwiftUI
 import GoogleSignIn
 import GoogleSignInSwift
 import OpenAPIURLSession
+import OpenAPIRuntime
 
 class AuthViewModel: ObservableObject {
     @Published var userSignedIn = false
@@ -25,25 +26,37 @@ class AuthViewModel: ObservableObject {
         
         let tempClient = Client(serverURL: serverURL, transport: URLSessionTransport())
         
-        let response = try await tempClient.googleAuthAuthGooglePost(.init(
-            body: .json(Components.Schemas.GoogleAuthRequest(idToken: googleIdToken))
-        ))
+        do {
+            let response = try await tempClient.googleAuthAuthGooglePost(
+                .init(body: .json(Components.Schemas.GoogleAuthRequest(idToken: googleIdToken)))
+            )
+            print("Decoded response: \(response)")
+        } catch {
+            print("Error: \(error)")
+        }
         
+        let response = try await tempClient.googleAuthAuthGooglePost(
+                .init(body: .json(Components.Schemas.GoogleAuthRequest(idToken: googleIdToken)))
+            )
+                
         switch response {
         case .ok(let success):
             if case .json(let loginResponse) = success.body {
                 let backendToken = loginResponse.accessToken
-                
-                // Set up authenticated client
-                self.client = Client(
+
+                let authedClient = Client(
                     serverURL: serverURL,
                     transport: URLSessionTransport(),
                     middlewares: [BearerAuthenticationMiddleware(token: backendToken)]
                 )
-                
-                self.userSignedIn = true
+
+                DispatchQueue.main.async {
+                    self.client = authedClient
+                    self.userSignedIn = true
+                }
                 return
             }
+
         case .unauthorized(_):
             throw NSError(domain: "AuthError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Token exchange failed"])
         case .unprocessableContent(_):
